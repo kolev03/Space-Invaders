@@ -4,7 +4,6 @@ import { addPlayer } from "./player";
 const app = new Application();
 
 async function setup() {
-
   await app.init({
     background: `white`,
     resizeTo: window,
@@ -24,18 +23,21 @@ async function load() {
       src: "assets/space-ship.png",
     },
     {
-      alias: "displacement",
-      src: "https://pixijs.com/assets/tutorials/fish-pond/displacement_map.png",
+      alias: "missle",
+      src: "assets/missle.jpg",
+    },
+    {
+      alias: "alien1",
+      src: "assets/alien1.png",
     },
   ];
 
-  await Assets.load(assets)
+  await Assets.load(assets);
 }
 (async () => {
   await setup();
   await load();
 
   addBackground(app);
-  addPlayer(app)
-
+  addPlayer(app);
 })();
