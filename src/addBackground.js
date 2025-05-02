@@ -5,11 +5,11 @@ export function addBackground(app){
 
     background.anchor.set(0.5)
 
-    if(background.width < app.screen.width){
+    if(background.width > app.screen.width){
         background.width = app.screen.width * 1.2
         background.scale.y = background.scale.x
     } else {
-        background.height = app.screen.height * 1.2
+        background.height = app.screen.height * 1.5
         background.scale.x = background.scale.y
     }
 

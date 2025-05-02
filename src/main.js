@@ -1,6 +1,7 @@
 import { Application, Assets, Text } from "pixi.js";
 import { addBackground } from "./addBackground";
 import { addPlayer } from "./player";
+import { addAliens } from "./aliens";
 const app = new Application();
 
 async function setup() {
@@ -40,4 +41,5 @@ async function load() {
 
   addBackground(app);
   addPlayer(app);
+  addAliens(app)
 })();

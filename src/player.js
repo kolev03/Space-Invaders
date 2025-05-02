@@ -9,7 +9,7 @@ export function addPlayer(app) {
   player.anchor.set(0.5);
 
   player.width = 150;
-  player.height = 100;
+  player.height = 100; 
 
   // Set starting position
   player.x = app.screen.width / 2;
@@ -20,7 +20,6 @@ export function addPlayer(app) {
   // Event listeners for the pressed keys
   window.addEventListener("keydown", (key) => {
     keys[key.code] = true;
-    console.log(key);
   });
 
   window.addEventListener("keyup", (key) => {
@@ -28,6 +27,7 @@ export function addPlayer(app) {
   });
 
   app.ticker.add(() => {
+
     // Player speed
     const speed = 15;
 
@@ -37,9 +37,10 @@ export function addPlayer(app) {
     if (player.x < app.screen.width - 100) {
       if (keys[`ArrowRight`]) player.x += speed;
     }
-
+    
     // If space is clicked a missle will be launched
-    if (keys["Space"]) fireMissle(app, player.x);
+    if (keys["Space"]) fireMissle(app, player.x, false);
+
   });
 
   app.stage.addChild(player);
