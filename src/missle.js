@@ -38,16 +38,6 @@ export function fireMissle(app, firePoint, alienHit) {
         missile.destroy();
         app.ticker.remove(moveMissle);
       }
-
-      alienArr.forEach((alien) => {
-        if (missile.x === alien.x) {
-          shoot = true;
-          app.stage.removeChild(missile);
-          missile.destroy();
-          app.ticker.remove(moveMissle);
-          console.log("Hit");
-        }
-      });
     };
 
     app.ticker.add(moveMissle);
