@@ -48,7 +48,7 @@ import { Sprite, Texture } from 'pixi.js';
 const WIDTH = 150;
 const HEIGHT = 100;
 
-const PADDING = 20;
+const PADDING = 80;
 
 class Player extends Sprite {
     constructor(x, y) {
@@ -60,17 +60,17 @@ class Player extends Sprite {
 
         this.anchor.set(0.5);
 
-        this.speed = 15;
+        this.speed = 25;
     }
 
     moveLeft() {
-        if (this.x > app.screen.width - PADDING) return;
+        if (this.x <= PADDING) return;
 
         this.x -= this.speed;
     }
 
-    moveRight() {
-        if (this.x < PADDING) return;
+    moveRight(app) {
+        if (this.x >= app.screen.width - PADDING) return;
 
         this.x += this.speed;
     }
