@@ -60,7 +60,7 @@ class Player extends Sprite {
 
         this.anchor.set(0.5);
 
-        this.speed = 25;
+        this.speed = 15;
     }
 
     moveLeft() {

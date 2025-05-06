@@ -1,15 +1,26 @@
-import { Application, Assets } from "pixi.js";
+import {
+  Application,
+  Assets,
+  Text,
+  TextStyle,
+  Container,
+  Graphics,
+} from "pixi.js";
 import { addBackground } from "./addBackground";
 import Player from "./player";
 import Alien from "./alien";
 import AliensContainer from "./aliensContainer";
 import Missle from "./missle";
+import Blocker from "./blockers";
 
 const app = new Application();
 
-const ROWS = 5;
-const COLS = 10;
-const SPACING = 75;
+const ROWS = 5; 
+const COLS = 13;
+const SPACING = 55;
+
+let infoText;
+let score = 0;
 
 async function setup() {
   await app.init({
@@ -38,6 +49,10 @@ async function load() {
       alias: "alien1",
       src: "assets/alien1.png",
     },
+    {
+      alias: "blocker1",
+      src: "assets/BLOCKER.png",
+    },
   ];
 
   await Assets.load(assets);
@@ -53,8 +68,9 @@ let missle = null;
   addBackground(app);
 
   const player = new Player(app.screen.width / 2, app.screen.height);
-  const aliensContainer = new AliensContainer();
+  app.stage.addChild(player);
 
+  const aliensContainer = new AliensContainer();
   // Add aliens to the container
   for (let col = 0; col < COLS; col++) {
     for (let row = 0; row < ROWS; row++) {
@@ -63,39 +79,28 @@ let missle = null;
     }
   }
 
-  // Measure custom width of the widest alien row
-  let maxRowWidth = 0;
-  for (let row = 0; row < ROWS; row++) {
-    const y = row * SPACING - 40;
-    const aliensInRow = aliensContainer.children.filter(
-      (alien) => Math.abs(alien.y - y) < 1
-    );
-    if (aliensInRow.length === 0) continue;
-
-    const leftMost = Math.min(...aliensInRow.map(a => a.x - a.width / 2));
-    const rightMost = Math.max(...aliensInRow.map(a => a.x + a.width / 2));
-    const rowWidth = rightMost - leftMost;
-
-    if (rowWidth > maxRowWidth) maxRowWidth = rowWidth;
-  }
-
-  // Store the true width manually
-  aliensContainer.customWidth = maxRowWidth;
-
+  // Add container to the canvas
   app.stage.addChild(aliensContainer);
 
-  // Center container based on computed width
-  aliensContainer.x = (app.screen.width - aliensContainer.customWidth) / 2;
-  aliensContainer.y = 70;
-  aliensContainer.direction = 1;
+  // Center container based on its width
+  aliensContainer.x = (app.screen.width - aliensContainer.width) / 2;
+  aliensContainer.y = 125;
 
-  app.stage.addChild(player);
+  // Add defense blocks
+  let numberShields = 4;
+  let shieldContainer = new Container()
+  for (let i = 1; i <= numberShields; i++) {
+    const block = new Blocker((app.screen.width / 5) * i, player.y - 100);
+    shieldContainer.addChild(block)
+    app.stage.addChild(block);
+  }
 
+  // Listening for key actions
   const keys = {};
   window.addEventListener("keydown", (key) => (keys[key.code] = true));
   window.addEventListener("keyup", (key) => (keys[key.code] = false));
 
-  // Player control
+  // Player control ticker
   app.ticker.add(() => {
     if (keys["ArrowLeft"]) player.moveLeft(app);
     if (keys["ArrowRight"]) player.moveRight(app);
@@ -108,24 +113,26 @@ let missle = null;
     }
   });
 
-  // Game loop
+  // Main game logic ticker
   app.ticker.add(() => {
     // Move aliensContainer
-    const speed = 2.5;
-    aliensContainer.x += aliensContainer.direction * speed;
 
-    const rightEdge = aliensContainer.x + aliensContainer.customWidth;
+    let aliensSpeed = 2.5;
+
+    aliensContainer.x += aliensContainer.direction * aliensSpeed;
+
+    const rightEdge = aliensContainer.x + aliensContainer.width;
     const leftEdge = aliensContainer.x;
 
     if (rightEdge >= app.screen.width) {
       aliensContainer.direction = -1;
       aliensContainer.y += 5;
-    } else if (leftEdge <= 0) {
+    } else if (leftEdge <= 50) {
       aliensContainer.direction = 1;
       aliensContainer.y += 5;
     }
 
-    // Missile logic
+    // Missle logic
     if (missle) {
       missle.move();
 
@@ -149,8 +156,53 @@ let missle = null;
           missle.die();
           missle = null;
           alien.die();
+          score += 10;
+          infoText.text = `Score: ${score}`;
         }
+        
+      });
+
+      shieldContainer.children.forEach((shield) => {
+        if (!missle) return;
+
+        const distance = Math.hypot(
+          missle.x - shield.x,
+          missle.y - shield.y
+        );
+        if (distance < shield.width / 2 + missle.width / 2) {
+          isMissleOnScreen = false;
+          missle.die();
+          missle = null;
+          shield.die();
+        }
+        
       });
     }
   });
+  await addScore(app);
 })();
+
+async function addScore(app) {
+  const uiContainer = new Container();
+  uiContainer.x = 30;
+  uiContainer.y = 10;
+
+  // Create text style
+  const style = new TextStyle({
+    fontSize: 34,
+    fill: "#ffffff",
+    fontFamily: "Arial",
+  });
+
+  // Create text
+  infoText = new Text({ text: `Score: ${score}`, style });
+
+  const bg = new Graphics();
+  bg.fill({ color: 0x00000 }); // semi-transparent black
+  bg.roundRect(0, 0, infoText.width + 20, infoText.height + 20, 10);
+  bg.resolution = 10;
+
+  // Assemble and add to stage
+  uiContainer.addChild(infoText);
+  app.stage.addChild(uiContainer);
+}
