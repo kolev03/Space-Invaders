@@ -15,7 +15,7 @@ import Blocker from "./blockers";
 
 const app = new Application();
 
-const ROWS = 5; 
+const ROWS = 5;
 const COLS = 13;
 const SPACING = 55;
 
@@ -66,11 +66,13 @@ let missle = null;
   await load();
 
   addBackground(app);
+  addScore(app);
 
   const player = new Player(app.screen.width / 2, app.screen.height);
   app.stage.addChild(player);
 
   const aliensContainer = new AliensContainer();
+  
   // Add aliens to the container
   for (let col = 0; col < COLS; col++) {
     for (let row = 0; row < ROWS; row++) {
@@ -88,12 +90,13 @@ let missle = null;
 
   // Add defense blocks
   let numberShields = 4;
-  let shieldContainer = new Container()
+  let shieldContainer = new Container();
   for (let i = 1; i <= numberShields; i++) {
-    const block = new Blocker((app.screen.width / 5) * i, player.y - 100);
-    shieldContainer.addChild(block)
-    app.stage.addChild(block);
+    const block = new Blocker((app.screen.width / 5) * i, player.y - 125);
+    shieldContainer.addChild(block);
   }
+
+  app.stage.addChild(shieldContainer);
 
   // Listening for key actions
   const keys = {};
@@ -113,22 +116,32 @@ let missle = null;
     }
   });
 
+  // Move aliensContainer
+  let aliensSpeed = 0.75;
+
   // Main game logic ticker
   app.ticker.add(() => {
-    // Move aliensContainer
+    aliensContainer.x += aliensSpeed * aliensContainer.direction;
 
-    let aliensSpeed = 2.5;
+    let leftMost = Infinity;
+    let rightMost = -Infinity;
 
-    aliensContainer.x += aliensContainer.direction * aliensSpeed;
+    // Adapting the width of the aliens container
+    aliensContainer.children.forEach((alien) => {
+      if (!alien.destroyed) {
+        let alienGlob = alien.getGlobalPosition();
+        leftMost = Math.min(leftMost, alienGlob.x);
+        rightMost = Math.max(rightMost, alienGlob.x);
+      }
+    });
 
-    const rightEdge = aliensContainer.x + aliensContainer.width;
-    const leftEdge = aliensContainer.x;
 
-    if (rightEdge >= app.screen.width) {
-      aliensContainer.direction = -1;
-      aliensContainer.y += 5;
-    } else if (leftEdge <= 50) {
+
+    if (leftMost <= 50) {
       aliensContainer.direction = 1;
+      aliensContainer.y += 5;
+    } else if (rightMost >= app.screen.width - 50) {
+      aliensContainer.direction = -1;
       aliensContainer.y += 5;
     }
 
@@ -143,6 +156,7 @@ let missle = null;
         return;
       }
 
+      // Logic for aliens hit
       aliensContainer.children.forEach((alien) => {
         if (!missle) return;
 
@@ -157,32 +171,36 @@ let missle = null;
           missle = null;
           alien.die();
           score += 10;
+          if (score == 650) {
+            infoText.text = `YOU WON!`;
+            return;
+          }
+          aliensSpeed += aliensSpeed * 0.043;
           infoText.text = `Score: ${score}`;
         }
-        
       });
 
+      // Logic for shield blocks hit
       shieldContainer.children.forEach((shield) => {
         if (!missle) return;
 
-        const distance = Math.hypot(
-          missle.x - shield.x,
-          missle.y - shield.y
-        );
+        const distance = Math.hypot(missle.x - shield.x, missle.y - shield.y);
         if (distance < shield.width / 2 + missle.width / 2) {
           isMissleOnScreen = false;
           missle.die();
           missle = null;
-          shield.die();
+          shield.hp = shield.hp - 1;
+          if ((shield.hp === 0)) shield.die();
         }
-        
       });
     }
   });
-  await addScore(app);
 })();
 
-async function addScore(app) {
+/**
+ * Adding the score to the game
+ */
+function addScore(app) {
   const uiContainer = new Container();
   uiContainer.x = 30;
   uiContainer.y = 10;

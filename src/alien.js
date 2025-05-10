@@ -15,6 +15,10 @@ class Alien extends Sprite {
   die() {
     this.destroy();
   }
+
+  shoot(){
+    
+  }
 }
 
 export default Alien;
