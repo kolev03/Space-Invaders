@@ -5,7 +5,7 @@ const WIDTH = 10;
 
 const SPEED = 3;
 
-class alienMissle extends Sprite {
+class alienMissile extends Sprite {
   get isOutOfBounce() {
     return this.y + HEIGHT < 0;
   }
@@ -23,4 +23,4 @@ class alienMissle extends Sprite {
   }
 }
 
-export default alienMissle;
+export default alienMissile;

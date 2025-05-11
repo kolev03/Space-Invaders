@@ -10,14 +10,11 @@ class Alien extends Sprite {
     this.x = x;
     this.y = y;
     this.anchor.set(0.5);
+    this.fire = false;
   }
 
   die() {
     this.destroy();
-  }
-
-  shoot(){
-    
   }
 }
 

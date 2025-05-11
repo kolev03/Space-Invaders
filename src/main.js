@@ -12,15 +12,23 @@ import Alien from "./alien";
 import AliensContainer from "./aliensContainer";
 import Missle from "./missle";
 import Blocker from "./blockers";
+import alienMissile from "./alienMissle";
 
 const app = new Application();
 
+// Setting the numbers of aliens and the spacing between them
 const ROWS = 5;
 const COLS = 13;
 const SPACING = 55;
 
 let infoText;
 let score = 0;
+
+// Setting the time for shooting the aliens
+let SHOOT_TIMER = 0;
+
+// Setting the speed of aliens
+let aliensSpeed = 0.75;
 
 async function setup() {
   await app.init({
@@ -72,7 +80,7 @@ let missle = null;
   app.stage.addChild(player);
 
   const aliensContainer = new AliensContainer();
-  
+
   // Add aliens to the container
   for (let col = 0; col < COLS; col++) {
     for (let row = 0; row < ROWS; row++) {
@@ -116,11 +124,12 @@ let missle = null;
     }
   });
 
-  // Move aliensContainer
-  let aliensSpeed = 0.75;
+  const columns = {};
 
   // Main game logic ticker
-  app.ticker.add(() => {
+  console.log(aliensContainer.children.filter(alien => alien.fire === true))
+  app.ticker.add((delta) => {
+
     aliensContainer.x += aliensSpeed * aliensContainer.direction;
 
     let leftMost = Infinity;
@@ -135,7 +144,40 @@ let missle = null;
       }
     });
 
+    // Storing the aliens in an object by columns and the setting the last to strike
+    aliensContainer.children.forEach((alien) => {
+      if (alien.destroyed) return;
 
+      const roundedX = Math.round(alien.x / SPACING) * SPACING;
+
+      if (!columns[roundedX]) {
+        columns[roundedX] = [];
+      }
+
+      columns[roundedX].push(alien);
+
+      for (let col in columns) {
+        const aliensInColumn = columns[col];
+
+        let lowestAlien = null;
+        let maxY = -Infinity;
+
+        for (const alien of aliensInColumn) {
+          if (!alien.destroyed && alien.y > maxY) {
+            maxY = alien.y;
+            lowestAlien = alien;
+          }
+        }
+
+        if (lowestAlien) {
+          lowestAlien.fire = true;
+        }
+      }
+    });
+
+    // setInterval(() => {
+    //   console.log("hi");
+    // }, 2000);
 
     if (leftMost <= 50) {
       aliensContainer.direction = 1;
@@ -169,6 +211,7 @@ let missle = null;
           isMissleOnScreen = false;
           missle.die();
           missle = null;
+          console.log(alien.fire);
           alien.die();
           score += 10;
           if (score == 650) {
@@ -190,7 +233,7 @@ let missle = null;
           missle.die();
           missle = null;
           shield.hp = shield.hp - 1;
-          if ((shield.hp === 0)) shield.die();
+          if (shield.hp === 0) shield.die();
         }
       });
     }
