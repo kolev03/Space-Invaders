@@ -16,13 +16,19 @@ import alienMissile from "./alienMissle";
 
 const app = new Application();
 
+// Game is running
+let gameRunning = true;
+
 // Setting the numbers of aliens and the spacing between them
 const ROWS = 5;
 const COLS = 13;
 const SPACING = 55;
+let NUMBER_SHIELDS = 4;
 
+// Variables for adaptive scoreboard
 let infoText;
 let score = 0;
+let playerHpText = 3;
 
 // Setting the time for shooting the aliens
 let SHOOT_TIMER = 2000;
@@ -43,7 +49,7 @@ async function load() {
   const assets = [
     {
       alias: "background",
-      src: "https://pixijs.com/assets/tutorials/fish-pond/pond_background.jpg",
+      src: "assets/galaxy.webp",
     },
     {
       alias: "playerShip",
@@ -61,6 +67,10 @@ async function load() {
       alias: "blocker1",
       src: "assets/BLOCKER.png",
     },
+    {
+      alias: "ufo",
+      src: "assets/ufo.png"
+    }
   ];
 
   await Assets.load(assets);
@@ -74,10 +84,11 @@ let missle = null;
   await load();
 
   addBackground(app);
-  addScore(app);
 
   const player = new Player(app.screen.width / 2, app.screen.height);
   app.stage.addChild(player);
+
+  addScore(app, player);
 
   const aliensContainer = new AliensContainer();
 
@@ -97,9 +108,8 @@ let missle = null;
   aliensContainer.y = 125;
 
   // Add defense blocks
-  let numberShields = 4;
   let shieldContainer = new Container();
-  for (let i = 1; i <= numberShields; i++) {
+  for (let i = 1; i <= NUMBER_SHIELDS; i++) {
     const block = new Blocker((app.screen.width / 5) * i, player.y - 125);
     shieldContainer.addChild(block);
   }
@@ -124,14 +134,10 @@ let missle = null;
     }
   });
 
-  //-------------------------------------------------------------------------------------
-
   const missiles = []; // Array to store active missiles
 
   function alienShoot() {
-    console.log(
-      `${SHOOT_TIMER / 1000} seconds passed - Aliens should shoot now!`
-    );
+    if (!gameRunning) return;
     let aliensToShoot = aliensContainer.children.filter((alien) => alien.fire);
     let randomAlienIndex = Math.floor(Math.random() * aliensToShoot.length);
     // Check if there are any aliens to shoot
@@ -145,43 +151,80 @@ let missle = null;
       );
       app.stage.addChild(alienMissileInstance);
       missiles.push(alienMissileInstance);
-    } else {
-      console.log("No aliens to shoot");
-      return; // Exit, if no aliens to shoot.
     }
   }
 
-  // Set up the 2-second interval using setInterval
   setInterval(alienShoot, SHOOT_TIMER);
-  //-------------------------------------------------------------------------------------
 
   // Main game logic ticker
   app.ticker.add(() => {
+    if (!gameRunning) return;
+
+    // Making each alien in a column and getting the alien with the biggest Y from each column. Then we set the property fire of that alien to true so it can shoot.
+    const columns = {};
+
+    aliensContainer.children.forEach((alien) => {
+      if (alien.destroyed) return;
+
+      const roundedX = Math.round(alien.x / SPACING) * SPACING;
+
+      if (!columns[roundedX]) {
+        columns[roundedX] = [];
+      }
+
+      // Check if the alien is already in the column before adding.
+      if (!columns[roundedX].includes(alien)) {
+        columns[roundedX].push(alien);
+      }
+    });
+
     // Tracking the alien missiles
     for (let i = missiles.length - 1; i >= 0; i--) {
       const missile = missiles[i];
-      missile.move(); // Move the missile
+      if (missile.destroyed) continue;
+      missile.move();
 
       if (missile.y - missile.height > app.screen.height) {
         missile.die();
         missiles.splice(i, 1); // Remove from the array
-        console.log("Missile destroyed and removed from array");
+        continue;
       }
 
       const globalPlayerPos = player.getGlobalPosition();
       const distance = Math.hypot(
-        alienMissile.x - globalPlayerPos.x,
-        alienMissile.y - globalPlayerPos.y
+        missile.x - globalPlayerPos.x,
+        missile.y - globalPlayerPos.y
       );
 
-
-      if (distance < player.width / 2 + alienMissile.width / 2) {
-        console.log("HIT");
-        player.die();
-        alienMissile.die();
+      // Checking if the player is hit
+      if (distance < player.width / 2 + missile.width / 2) {
+        player.hp -= 1;
+        infoText.text = `Score: ${score}, HP: ${player.hp}`;
+        if (player.hp === 0) {
+          player.die();
+          gameRunning = false;
+          infoText.text = `YOU LOST!`;
+        }
+        missile.die();
+        missiles.splice(i, 1);
+        break;
       }
-      // You can add collision detection here, and remove missiles from the array
-      // when they collide, too.
+
+      // Checking if the shield is hit
+      shieldContainer.children.forEach((shield) => {
+        if (!missile.destroyed) {
+          const distance = Math.hypot(
+            missile.x - shield.x,
+            missile.y - shield.y
+          );
+          if (distance < shield.width / 2 + missile.width / 2) {
+            missile.die();
+            shield.alpha -= 0.25;
+            shield.hp = shield.hp - 1;
+            if (shield.hp === 0) shield.die();
+          }
+        }
+      });
     }
 
     // Moving the aliens
@@ -195,23 +238,6 @@ let missle = null;
         let alienGlob = alien.getGlobalPosition();
         leftMost = Math.min(leftMost, alienGlob.x);
         rightMost = Math.max(rightMost, alienGlob.x);
-      }
-    });
-
-    // Making each alien in a column and getting the alien with the biggest Y from each column. Then we set the property fire of that alien to true so it can shoot.
-    const columns = {};
-    aliensContainer.children.forEach((alien) => {
-      if (alien.destroyed) return;
-
-      const roundedX = Math.round(alien.x / SPACING) * SPACING;
-
-      if (!columns[roundedX]) {
-        columns[roundedX] = [];
-      }
-
-      // Check if the alien is already in the column before adding.
-      if (!columns[roundedX].includes(alien)) {
-        columns[roundedX].push(alien);
       }
     });
 
@@ -231,6 +257,14 @@ let missle = null;
       if (lowestAlien) {
         lowestAlien.fire = true;
       }
+
+      // Checking if the allien is at the end line, if it is game is over.
+      const globalPosAlien = lowestAlien.getGlobalPosition();
+      if (player.destroyed) return;
+      if (globalPosAlien.y >= player.y - 175) {
+        infoText.text = `YOU LOST`;
+        gameRunning = false;
+      }
     }
 
     // Clear the columns object.
@@ -240,10 +274,10 @@ let missle = null;
 
     if (leftMost <= 50) {
       aliensContainer.direction = 1;
-      aliensContainer.y += 5;
+      aliensContainer.y += 15;
     } else if (rightMost >= app.screen.width - 50) {
       aliensContainer.direction = -1;
-      aliensContainer.y += 5;
+      aliensContainer.y += 15;
     }
 
     // Making the missle move, and dissappear if it gets outside the view
@@ -270,15 +304,15 @@ let missle = null;
           isMissleOnScreen = false;
           missle.die();
           missle = null;
-          console.log(alien.fire);
           alien.die();
           score += 10;
           if (score == 650) {
             infoText.text = `YOU WON!`;
+            gameRunning = false;
             return;
           }
           aliensSpeed += aliensSpeed * 0.043;
-          infoText.text = `Score: ${score}`;
+          infoText.text = `Score: ${score}, HP: ${player.hp}`;
         }
       });
 
@@ -292,7 +326,6 @@ let missle = null;
           missle.die();
           missle = null;
           shield.alpha -= 0.25;
-          console.log(shield.opac);
           shield.hp = shield.hp - 1;
           if (shield.hp === 0) shield.die();
         }
@@ -304,7 +337,7 @@ let missle = null;
 /**
  * Adding the score to the game
  */
-function addScore(app) {
+function addScore(app, player) {
   const uiContainer = new Container();
   uiContainer.x = 30;
   uiContainer.y = 10;
@@ -317,7 +350,7 @@ function addScore(app) {
   });
 
   // Create text
-  infoText = new Text({ text: `Score: ${score}`, style });
+  infoText = new Text({ text: `Score: ${score}, HP: ${playerHpText}`, style });
 
   const bg = new Graphics();
   bg.fill({ color: 0x00000 }); // semi-transparent black

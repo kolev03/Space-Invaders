@@ -12,7 +12,7 @@ class Player extends Sprite {
     this.height = HEIGHT;
     this.x = x;
     this.y = y - HEIGHT / 2;
-
+    this.hp = 3;
     this.anchor.set(0.5);
 
     this.speed = 15;
