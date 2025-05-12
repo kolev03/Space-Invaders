@@ -25,7 +25,7 @@ let infoText;
 let score = 0;
 
 // Setting the time for shooting the aliens
-let SHOOT_TIMER = 0;
+let SHOOT_TIMER = 2000;
 
 // Setting the speed of aliens
 let aliensSpeed = 0.75;
@@ -124,18 +124,72 @@ let missle = null;
     }
   });
 
-  const columns = {};
+  //-------------------------------------------------------------------------------------
+
+  const missiles = []; // Array to store active missiles
+
+  function alienShoot() {
+    console.log(
+      `${SHOOT_TIMER / 1000} seconds passed - Aliens should shoot now!`
+    );
+    let aliensToShoot = aliensContainer.children.filter((alien) => alien.fire);
+    let randomAlienIndex = Math.floor(Math.random() * aliensToShoot.length);
+    // Check if there are any aliens to shoot
+    if (aliensToShoot.length > 0) {
+      const randomAlien = aliensToShoot[randomAlienIndex];
+      const alienGlobal = randomAlien.getGlobalPosition();
+
+      const alienMissileInstance = new alienMissile(
+        alienGlobal.x,
+        alienGlobal.y
+      );
+      app.stage.addChild(alienMissileInstance);
+      missiles.push(alienMissileInstance);
+    } else {
+      console.log("No aliens to shoot");
+      return; // Exit, if no aliens to shoot.
+    }
+  }
+
+  // Set up the 2-second interval using setInterval
+  setInterval(alienShoot, SHOOT_TIMER);
+  //-------------------------------------------------------------------------------------
 
   // Main game logic ticker
-  console.log(aliensContainer.children.filter(alien => alien.fire === true))
-  app.ticker.add((delta) => {
+  app.ticker.add(() => {
+    // Tracking the alien missiles
+    for (let i = missiles.length - 1; i >= 0; i--) {
+      const missile = missiles[i];
+      missile.move(); // Move the missile
 
+      if (missile.y - missile.height > app.screen.height) {
+        missile.die();
+        missiles.splice(i, 1); // Remove from the array
+        console.log("Missile destroyed and removed from array");
+      }
+
+      const globalPlayerPos = player.getGlobalPosition();
+      const distance = Math.hypot(
+        alienMissile.x - globalPlayerPos.x,
+        alienMissile.y - globalPlayerPos.y
+      );
+
+
+      if (distance < player.width / 2 + alienMissile.width / 2) {
+        console.log("HIT");
+        player.die();
+        alienMissile.die();
+      }
+      // You can add collision detection here, and remove missiles from the array
+      // when they collide, too.
+    }
+
+    // Moving the aliens
     aliensContainer.x += aliensSpeed * aliensContainer.direction;
-
     let leftMost = Infinity;
     let rightMost = -Infinity;
 
-    // Adapting the width of the aliens container
+    // Making the aliens container adaptive, so when the container reaches the end of the screen it goes to the last alien
     aliensContainer.children.forEach((alien) => {
       if (!alien.destroyed) {
         let alienGlob = alien.getGlobalPosition();
@@ -144,7 +198,8 @@ let missle = null;
       }
     });
 
-    // Storing the aliens in an object by columns and the setting the last to strike
+    // Making each alien in a column and getting the alien with the biggest Y from each column. Then we set the property fire of that alien to true so it can shoot.
+    const columns = {};
     aliensContainer.children.forEach((alien) => {
       if (alien.destroyed) return;
 
@@ -154,30 +209,34 @@ let missle = null;
         columns[roundedX] = [];
       }
 
-      columns[roundedX].push(alien);
-
-      for (let col in columns) {
-        const aliensInColumn = columns[col];
-
-        let lowestAlien = null;
-        let maxY = -Infinity;
-
-        for (const alien of aliensInColumn) {
-          if (!alien.destroyed && alien.y > maxY) {
-            maxY = alien.y;
-            lowestAlien = alien;
-          }
-        }
-
-        if (lowestAlien) {
-          lowestAlien.fire = true;
-        }
+      // Check if the alien is already in the column before adding.
+      if (!columns[roundedX].includes(alien)) {
+        columns[roundedX].push(alien);
       }
     });
 
-    // setInterval(() => {
-    //   console.log("hi");
-    // }, 2000);
+    // Iterate through the columns object to find the lowest alien in each
+    for (const col in columns) {
+      let lowestAlien = null;
+      let maxY = -Infinity;
+
+      columns[col].forEach((alien) => {
+        // Iterate over the aliens *in the column*
+        if (!alien.destroyed && alien.y > maxY) {
+          maxY = alien.y;
+          lowestAlien = alien;
+        }
+      });
+
+      if (lowestAlien) {
+        lowestAlien.fire = true;
+      }
+    }
+
+    // Clear the columns object.
+    for (const col in columns) {
+      columns[col] = [];
+    }
 
     if (leftMost <= 50) {
       aliensContainer.direction = 1;
@@ -187,7 +246,7 @@ let missle = null;
       aliensContainer.y += 5;
     }
 
-    // Missle logic
+    // Making the missle move, and dissappear if it gets outside the view
     if (missle) {
       missle.move();
 
@@ -232,6 +291,8 @@ let missle = null;
           isMissleOnScreen = false;
           missle.die();
           missle = null;
+          shield.alpha -= 0.25;
+          console.log(shield.opac);
           shield.hp = shield.hp - 1;
           if (shield.hp === 0) shield.die();
         }

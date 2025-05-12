@@ -3,7 +3,7 @@ import { Sprite, Texture } from "pixi.js";
 const WIDTH = 30; 
 const HEIGHT = 70;
 
-const SPEED = 5
+const SPEED = 45
 const HP = 4
 
 class Missle extends Sprite {

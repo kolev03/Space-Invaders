@@ -6,11 +6,9 @@ const WIDTH = 10;
 const SPEED = 3;
 
 class alienMissile extends Sprite {
-  get isOutOfBounce() {
-    return this.y + HEIGHT < 0;
-  }
   constructor(x, y) {
-    super(Texture.from(`missle`)), (this.x = x);
+    super(Texture.from(`missle`));
+    this.x = x;
     this.y = y;
     this.width = WIDTH;
     this.height = HEIGHT;
