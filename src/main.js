@@ -16,6 +16,8 @@ import alienMissile from "./alienMissle";
 
 const app = new Application();
 
+globalThis.__PIXI_APP__ = app;
+
 // Game is running
 let gameRunning = true;
 
@@ -108,7 +110,7 @@ let missle = null;
   aliensContainer.y = 125;
 
   // Add defense blocks
-  let shieldContainer = new Container();
+  let shieldContainer = new Container(); 
   for (let i = 1; i <= NUMBER_SHIELDS; i++) {
     const block = new Blocker((app.screen.width / 5) * i, player.y - 125);
     shieldContainer.addChild(block);
