@@ -1,8 +1,8 @@
-import { Sprite } from "pixi.js";
+import { Sprite, Texture } from "pixi.js";
 
-const WIDTH = 50;
-const HEIGHT = 20;
-const SPEED = 5;
+const WIDTH = 120;
+const HEIGHT = 120;
+const SPEED = 3;
 
 class UFO extends Sprite {
   constructor(x) {
@@ -10,11 +10,15 @@ class UFO extends Sprite {
     this.width = WIDTH;
     this.height = HEIGHT;
     this.x = x;
-    this.y = 100;
+    this.y = 50;
   }
 
   move() {
     this.x -= SPEED;
+  }
+
+  die() {
+    this.destroy();
   }
 }
 

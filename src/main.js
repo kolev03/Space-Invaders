@@ -5,6 +5,7 @@ import {
   TextStyle,
   Container,
   Graphics,
+  applyMatrix,
 } from "pixi.js";
 import { addBackground } from "./addBackground";
 import Player from "./player";
@@ -13,6 +14,7 @@ import AliensContainer from "./aliensContainer";
 import Missle from "./missle";
 import Blocker from "./blockers";
 import alienMissile from "./alienMissle";
+import UFO from "./ufo";
 
 const app = new Application();
 
@@ -26,7 +28,7 @@ const SPACING = 55;
 let NUMBER_SHIELDS = 4;
 
 // Variables for adaptive scoreboard
-let infoText;
+let INFO_TEXT;
 let score = 0;
 let playerHpText = 3;
 
@@ -69,8 +71,8 @@ async function load() {
     },
     {
       alias: "ufo",
-      src: "assets/ufo.png"
-    }
+      src: "assets/ufo.png",
+    },
   ];
 
   await Assets.load(assets);
@@ -156,9 +158,36 @@ let missle = null;
 
   setInterval(alienShoot, SHOOT_TIMER);
 
+  let interval = 0;
   // Main game logic ticker
   app.ticker.add(() => {
+    interval++;
+
+    if (interval == 15 * 60) {
+      const ufo = new UFO();
+    ufo.x = app.screen.width + ufo.width;
+    ufo.label = "ufo";
+    app.stage.addChild(ufo);
+    console.log("added");
+      interval = 0;
+    }
+
     if (!gameRunning) return;
+
+    // Moving the UFO, if there is any
+    if (app.stage.getChildByName("ufo")) {
+      const ufo = app.stage.getChildByName("ufo");
+      ufo.move();
+      if (ufo.x + ufo.width <= 0) {
+        ufo.die();
+        console.log("Ufo died");
+      }
+    }
+
+    // Moving the aliens
+    aliensContainer.x += aliensSpeed * aliensContainer.direction;
+    let leftMost = Infinity;
+    let rightMost = -Infinity;
 
     // Making each alien in a column and getting the alien with the biggest Y from each column. Then we set the property fire of that alien to true so it can shoot.
     const columns = {};
@@ -177,60 +206,6 @@ let missle = null;
         columns[roundedX].push(alien);
       }
     });
-
-    // Tracking the alien missiles
-    for (let i = missiles.length - 1; i >= 0; i--) {
-      const missile = missiles[i];
-      if (missile.destroyed) continue;
-      missile.move();
-
-      if (missile.y - missile.height > app.screen.height) {
-        missile.die();
-        missiles.splice(i, 1); // Remove from the array
-        continue;
-      }
-
-      const globalPlayerPos = player.getGlobalPosition();
-      const distance = Math.hypot(
-        missile.x - globalPlayerPos.x,
-        missile.y - globalPlayerPos.y
-      );
-
-      // Checking if the player is hit
-      if (distance < player.width / 2 + missile.width / 2) {
-        player.hp -= 1;
-        infoText.text = `Score: ${score}, HP: ${player.hp}`;
-        if (player.hp === 0) {
-          player.die();
-          gameRunning = false;
-          infoText.text = `YOU LOST!`;
-        }
-        missile.die();
-        missiles.splice(i, 1);
-        break;
-      }
-
-      // Checking if the shield is hit
-      shieldContainer.children.forEach((shield) => {
-        if (!missile.destroyed) {
-          const distance = Math.hypot(
-            missile.x - shield.x,
-            missile.y - shield.y
-          );
-          if (distance < shield.width / 2 + missile.width / 2) {
-            missile.die();
-            shield.alpha -= 0.25;
-            shield.hp = shield.hp - 1;
-            if (shield.hp === 0) shield.die();
-          }
-        }
-      });
-    }
-
-    // Moving the aliens
-    aliensContainer.x += aliensSpeed * aliensContainer.direction;
-    let leftMost = Infinity;
-    let rightMost = -Infinity;
 
     // Making the aliens container adaptive, so when the container reaches the end of the screen it goes to the last alien
     aliensContainer.children.forEach((alien) => {
@@ -257,12 +232,12 @@ let missle = null;
       if (lowestAlien) {
         lowestAlien.fire = true;
       }
-
-      // Checking if the allien is at the end line, if it is game is over.
+      
+      // Checking if the alien is at the end line, if it is game is over.
       const globalPosAlien = lowestAlien.getGlobalPosition();
       if (player.destroyed) return;
       if (globalPosAlien.y >= player.y - 175) {
-        infoText.text = `YOU LOST`;
+        INFO_TEXT.text = `YOU LOST`;
         gameRunning = false;
       }
     }
@@ -278,6 +253,55 @@ let missle = null;
     } else if (rightMost >= app.screen.width - 50) {
       aliensContainer.direction = -1;
       aliensContainer.y += 15;
+    }
+
+    // Tracking the alien missiles
+    for (let i = missiles.length - 1; i >= 0; i--) {
+      const missile = missiles[i];
+      if (missile.destroyed) continue;
+      missile.move();
+
+      if (missile.y - missile.height > app.screen.height) {
+        missile.die();
+        missiles.splice(i, 1); // Remove from the array
+        continue;
+      }
+
+      const globalPlayerPos = player.getGlobalPosition();
+      const distance = Math.hypot(
+        missile.x - globalPlayerPos.x,
+        missile.y - globalPlayerPos.y
+      );
+
+      // Checking if the player is hit
+      if (distance < player.width / 2 + missile.width / 2) {
+        player.hp -= 1;
+        INFO_TEXT.text = `Score: ${score}, HP: ${player.hp}`;
+        if (player.hp === 0) {
+          player.die();
+          gameRunning = false;
+          INFO_TEXT.text = `YOU LOST!`;
+        }
+        missile.die();
+        missiles.splice(i, 1);
+        break;
+      }
+
+      // Checking if the shield is hit
+      shieldContainer.children.forEach((shield) => {
+        if (!missile.destroyed) {
+          const distance = Math.hypot(
+            missile.x - shield.x,
+            missile.y - shield.y
+          );
+          if (distance < shield.width / 2 + missile.width / 2) {
+            missile.die();
+            shield.alpha -= 0.25;
+            shield.hp = shield.hp - 1;
+            if (shield.hp === 0) shield.die();
+          }
+        }
+      });
     }
 
     // Making the missle move, and dissappear if it gets outside the view
@@ -307,12 +331,12 @@ let missle = null;
           alien.die();
           score += 10;
           if (score == 650) {
-            infoText.text = `YOU WON!`;
+            INFO_TEXT.text = `YOU WON!`;
             gameRunning = false;
             return;
           }
           aliensSpeed += aliensSpeed * 0.043;
-          infoText.text = `Score: ${score}, HP: ${player.hp}`;
+          INFO_TEXT.text = `Score: ${score}, HP: ${player.hp}`;
         }
       });
 
@@ -330,6 +354,28 @@ let missle = null;
           if (shield.hp === 0) shield.die();
         }
       });
+
+      // Logic for UFO hit
+      if (app.stage.getChildByName("ufo")) {
+        if (!missle) return;
+        const ufo = app.stage.getChildByName("ufo");
+        const globalUfo = ufo.getGlobalPosition();
+
+        const distance = Math.hypot(
+          missle.x - globalUfo.x,
+          missle.y - globalUfo.y
+        );
+
+        if (distance < ufo.width / 2 + missle.width / 2) {
+          isMissleOnScreen = false;
+          missle.die();
+          missle = null;
+          ufo.die();
+          console.log("Hit");
+          score += 150;
+          INFO_TEXT.text = `Score: ${score}, HP: ${player.hp}`;
+        }
+      }
     }
   });
 })();
@@ -350,14 +396,14 @@ function addScore(app, player) {
   });
 
   // Create text
-  infoText = new Text({ text: `Score: ${score}, HP: ${playerHpText}`, style });
+  INFO_TEXT = new Text({ text: `Score: ${score}, HP: ${playerHpText}`, style });
 
   const bg = new Graphics();
   bg.fill({ color: 0x00000 }); // semi-transparent black
-  bg.roundRect(0, 0, infoText.width + 20, infoText.height + 20, 10);
+  bg.roundRect(0, 0, INFO_TEXT.width + 20, INFO_TEXT.height + 20, 10);
   bg.resolution = 10;
 
   // Assemble and add to stage
-  uiContainer.addChild(infoText);
+  uiContainer.addChild(INFO_TEXT);
   app.stage.addChild(uiContainer);
 }
