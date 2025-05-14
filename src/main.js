@@ -232,7 +232,7 @@ let missle = null;
       if (lowestAlien) {
         lowestAlien.fire = true;
       }
-      
+    
       // Checking if the alien is at the end line, if it is game is over.
       const globalPosAlien = lowestAlien.getGlobalPosition();
       if (player.destroyed) return;
