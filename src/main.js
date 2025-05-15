@@ -16,6 +16,8 @@ import Blocker from "./blockers";
 import alienMissile from "./alienMissle";
 import UFO from "./ufo";
 import Score from "./score";
+import OmegaRay from "./omegaRay";
+import GuidedMissile from "./guidedMissile";
 
 const app = new Application();
 
@@ -32,6 +34,8 @@ const NUMBER_SHIELDS = 4;
 let INFO_TEXT;
 let score = 0;
 let playerHpText = 3;
+let guidedMissiles = [];
+let aliensTotal = [];
 
 // Setting the speed of aliens
 let aliensSpeed = 0.75;
@@ -79,6 +83,14 @@ async function load() {
       alias: "ufo",
       src: "assets/ufo.png",
     },
+    {
+      alias: "omegaRay",
+      src: "assets/omegaRay.jpg",
+    },
+    {
+      alias: "guidedMissile",
+      src: "assets/guidedMissile.jpg",
+    },
   ];
 
   await Assets.load(assets);
@@ -96,7 +108,8 @@ let missle = null;
   const player = new Player(app.screen.width / 2, app.screen.height);
   app.stage.addChild(player);
 
-  const scoreDisplay = new Score(30, 10); // Create a new Score object
+  const scoreDisplay = new Score(30, 15); // Create a new Score object
+  scoreDisplay.x = app.screen.width / 2;
   scoreDisplay.addTo(app.stage);
 
   const aliensContainer = new AliensContainer();
@@ -221,11 +234,12 @@ let missle = null;
     if (intervalAlienMissile == secondsAlienShoot * 60) {
       const randomNum = Math.floor(
         Math.random() * aliensContainer.children.length
-      ); 
+      );
       if (aliensContainer.children[randomNum]) {
         let randomCol = aliensContainer.children[randomNum];
         if (randomCol.children && randomCol.children.length > 0) {
           const chosenAlien = randomCol.children[randomCol.children.length - 1];
+          chosenAlien.fire = true;
           const chosenAlienGlobal = chosenAlien.getGlobalPosition();
           const alienMissleStrike = new alienMissile(
             chosenAlienGlobal.x,
@@ -287,6 +301,20 @@ let missle = null;
       });
     }
 
+    // Making the guided missile move
+    guidedMissiles.forEach((missile) => {
+      missile.move();
+      if (
+        missile.y - missile.height > app.screen.height ||
+        missile.x < 0 ||
+        missile.x > app.screen.width
+      ) {
+        missile.die();
+        guidedMissiles.splice(guidedMissiles.indexOf(missile), 1);
+      }
+    });
+
+    let guidedMissile;
     // Making the missle move, and dissappear if it gets outside the view
     if (missle) {
       missle.move();
@@ -308,17 +336,36 @@ let missle = null;
             missle.x - globalAlienPos.x,
             missle.y - globalAlienPos.y
           );
+
           if (distance < alien.width / 2 + missle.width / 2) {
             isMissleOnScreen = false;
             missle.die();
             missle = null;
             alien.die();
             score += 10;
-            scoreDisplay.updateScore(score);
-            if (score == 650) {
-              gameRunning = false;
-              return;
+
+            // Logic for spawning guided missiles
+            if (score % 100 === 0) {
+              const totalAlienFilter = aliensTotal.filter(
+                (alien) => alien.fire == true
+              );
+              const number =
+                Math.floor(
+                  Math.random() *
+                    aliensTotal.filter((alien) => alien.fire == true).length
+                ) + 1;
+
+              guidedMissile = new GuidedMissile(
+                player.x,
+                player.y,
+                totalAlienFilter[number]
+              ); // Target the alien
+              guidedMissiles.push(guidedMissile);
+              app.stage.addChild(guidedMissile);
+              guidedMissile.label = "guidedMissle";
             }
+
+            scoreDisplay.updateScore(score);
             aliensSpeed += aliensSpeed * 0.043;
           }
         });
@@ -360,5 +407,18 @@ let missle = null;
         }
       }
     }
+    if (aliensContainer.children.length == 0) {
+      gameRunning = false;
+      scoreDisplay.displayResult("WON");
+    }
+
+    // Checking if all the aliens are killed
+
+    aliensContainer.children.forEach((col) => {
+      for (let index = 0; index < col.children.length; index++) {
+        aliensTotal.push(col.children[index]);
+      }
+    });
+    if (aliensTotal.length == 0) scoreDisplay.displayResult("WON");
   });
 })();

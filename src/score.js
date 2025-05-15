@@ -1,7 +1,7 @@
 import { Text, Container, Graphics } from "pixi.js";
 
 export default class Score {
-  constructor(x = 30, y = 10) {
+  constructor(x, y) {
     this.score = 0;
     this.hp = 3; // Добавяме начална стойност за HP
 
