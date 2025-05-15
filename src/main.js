@@ -15,13 +15,12 @@ import Missle from "./missle";
 import Blocker from "./blockers";
 import alienMissile from "./alienMissle";
 import UFO from "./ufo";
+import Score from "./score";
 
 const app = new Application();
 
 // Game is running
 let gameRunning = true;
-let isMissleOnScreen = false;
-let missle = null;
 
 // Setting the numbers of aliens and the spacing between them
 const ROWS = 5;
@@ -31,15 +30,15 @@ const NUMBER_SHIELDS = 4;
 
 // Variables for adaptive scoreboard
 let INFO_TEXT;
-const score = 0;
-const playerHpText = 3;
+let score = 0;
+let playerHpText = 3;
 
 // Setting the speed of aliens
-const aliensSpeed = 0.75;
+let aliensSpeed = 0.75;
 
 // Counting time past in the ticker
-const intervalUFO = 0;
-const intervalAlienMissile = 0;
+let intervalUFO = 0;
+let intervalAlienMissile = 0;
 
 // Seconds for actions
 const secondsUFO = 15;
@@ -85,7 +84,8 @@ async function load() {
   await Assets.load(assets);
 }
 
-
+let isMissleOnScreen = false;
+let missle = null;
 
 (async () => {
   await setup();
@@ -96,7 +96,8 @@ async function load() {
   const player = new Player(app.screen.width / 2, app.screen.height);
   app.stage.addChild(player);
 
-  addScore(app, player);
+  const scoreDisplay = new Score(30, 10); // Create a new Score object
+  scoreDisplay.addTo(app.stage);
 
   const aliensContainer = new AliensContainer();
 
@@ -178,7 +179,6 @@ async function load() {
       ufo.x = app.screen.width + ufo.width;
       ufo.label = "ufo";
       app.stage.addChild(ufo);
-      console.log("added");
       intervalUFO = 0;
     }
 
@@ -219,20 +219,22 @@ async function load() {
 
     // Making the aliens shoot every secondsAlienShoot seconds
     if (intervalAlienMissile == secondsAlienShoot * 60) {
-      const randomNum =
-        Math.trunc(Math.random() * aliensContainer.children.length) + 1;
-      let randomCol = aliensContainer.children[randomNum];
-      const chosenAlien = randomCol.children[randomCol.children.length - 1];
-
-      const chosenAlienGlobal = chosenAlien.getGlobalPosition();
-
-      const alienMissleStrike = new alienMissile(
-        chosenAlienGlobal.x,
-        chosenAlienGlobal.y
-      );
-
-      app.stage.addChild(alienMissleStrike);
-      missiles.push(alienMissleStrike);
+      const randomNum = Math.floor(
+        Math.random() * aliensContainer.children.length
+      ); 
+      if (aliensContainer.children[randomNum]) {
+        let randomCol = aliensContainer.children[randomNum];
+        if (randomCol.children && randomCol.children.length > 0) {
+          const chosenAlien = randomCol.children[randomCol.children.length - 1];
+          const chosenAlienGlobal = chosenAlien.getGlobalPosition();
+          const alienMissleStrike = new alienMissile(
+            chosenAlienGlobal.x,
+            chosenAlienGlobal.y
+          );
+          app.stage.addChild(alienMissleStrike);
+          missiles.push(alienMissleStrike);
+        }
+      }
       intervalAlienMissile = 0;
     }
 
@@ -257,11 +259,11 @@ async function load() {
       // Checking if the player is hit
       if (distance < player.width / 2 + missile.width / 2) {
         player.hp -= 1;
-        INFO_TEXT.text = `Score: ${score}, HP: ${player.hp}`;
+        scoreDisplay.updateHp(player.hp);
         if (player.hp === 0) {
           player.die();
           gameRunning = false;
-          INFO_TEXT.text = `YOU LOST!`;
+          scoreDisplay.updateScore("LOST");
         }
         missile.die();
         missiles.splice(i, 1);
@@ -312,13 +314,12 @@ async function load() {
             missle = null;
             alien.die();
             score += 10;
+            scoreDisplay.updateScore(score);
             if (score == 650) {
-              INFO_TEXT.text = `YOU WON!`;
               gameRunning = false;
               return;
             }
             aliensSpeed += aliensSpeed * 0.043;
-            INFO_TEXT.text = `Score: ${score}, HP: ${player.hp}`;
           }
         });
       });
@@ -354,39 +355,10 @@ async function load() {
           missle.die();
           missle = null;
           ufo.die();
-          console.log("Hit");
           score += 150;
-          INFO_TEXT.text = `Score: ${score}, HP: ${player.hp}`;
+          scoreDisplay.updateScore(score);
         }
       }
     }
   });
 })();
-
-/**
- * Adding the score to the game
- */
-function addScore(app, player) {
-  const uiContainer = new Container();
-  uiContainer.x = 30;
-  uiContainer.y = 10;
-
-  // Create text style
-  const style = new TextStyle({
-    fontSize: 34,
-    fill: "#ffffff",
-    fontFamily: "Arial",
-  });
-
-  // Create text
-  INFO_TEXT = new Text({ text: `Score: ${score}, HP: ${playerHpText}`, style });
-
-  const bg = new Graphics();
-  bg.fill({ color: 0x00000 }); // semi-transparent black
-  bg.roundRect(0, 0, INFO_TEXT.width + 20, INFO_TEXT.height + 20, 10);
-  bg.resolution = 10;
-
-  // Assemble and add to stage
-  uiContainer.addChild(INFO_TEXT);
-  app.stage.addChild(uiContainer);
-}
