@@ -20,31 +20,30 @@ const app = new Application();
 
 // Game is running
 let gameRunning = true;
+let isMissleOnScreen = false;
+let missle = null;
 
 // Setting the numbers of aliens and the spacing between them
 const ROWS = 5;
 const COLS = 13;
 const SPACING = 55;
-let NUMBER_SHIELDS = 4;
+const NUMBER_SHIELDS = 4;
 
 // Variables for adaptive scoreboard
 let INFO_TEXT;
-let score = 0;
-let playerHpText = 3;
-
-// Setting the time for shooting the aliens
-let SHOOT_TIMER = 2000;
+const score = 0;
+const playerHpText = 3;
 
 // Setting the speed of aliens
-let aliensSpeed = 0.75;
+const aliensSpeed = 0.75;
 
 // Counting time past in the ticker
-let intervalUFO = 0;
-let intervalAlienMissile = 0;
+const intervalUFO = 0;
+const intervalAlienMissile = 0;
 
 // Seconds for actions
-let secondsUFO = 15;
-let secondsAlienShoot = 2;
+const secondsUFO = 15;
+const secondsAlienShoot = 2;
 
 async function setup() {
   await app.init({
@@ -86,8 +85,7 @@ async function load() {
   await Assets.load(assets);
 }
 
-let isMissleOnScreen = false;
-let missle = null;
+
 
 (async () => {
   await setup();
@@ -104,10 +102,13 @@ let missle = null;
 
   // Add aliens to the container
   for (let col = 0; col < COLS; col++) {
+    const container = new Container();
+
     for (let row = 0; row < ROWS; row++) {
       const alien = new Alien(col * SPACING, row * SPACING - 40);
-      aliensContainer.addChild(alien);
+      container.addChild(alien);
     }
+    aliensContainer.addChild(container);
   }
 
   // Add container to the canvas
@@ -131,6 +132,25 @@ let missle = null;
   window.addEventListener("keydown", (key) => (keys[key.code] = true));
   window.addEventListener("keyup", (key) => (keys[key.code] = false));
 
+  //  const keyActions = {
+  //     ArrowLeft: () => {
+  //       player.moveLeft(app);
+  //     },
+  //     ArrowRight: () => {
+  //       player.moveRight(app);
+  //     },
+  //     Space: () => {
+  //       if (isMissleOnScreen) return;
+  //       isMissleOnScreen = true;
+  //       missle = new Missle(player.x, player.y);
+  //       app.stage.addChild(missle);
+  //     },
+  //   };
+
+  //   window.addEventListener("keydown", (key) => {
+  //     if (keyActions[key.code]) keyActions[key.code]();
+  //   });
+
   const missiles = []; // Array to store active missiles
 
   // Main game logic ticker
@@ -145,11 +165,11 @@ let missle = null;
     if (keys["ArrowRight"]) player.moveRight(app);
 
     if (keys["Space"]) {
+      keys["Space"] = false;
       if (isMissleOnScreen) return;
       isMissleOnScreen = true;
       missle = new Missle(player.x, player.y);
       app.stage.addChild(missle);
-      keys["Space"] = false;
     }
 
     // Sending UFO every secondsUFO seconds
@@ -177,64 +197,18 @@ let missle = null;
     let leftMost = Infinity;
     let rightMost = -Infinity;
 
-    // Making each alien in a column and getting the alien with the biggest Y from each column. Then we set the property fire of that alien to true so it can shoot.
-    const columns = {};
-
-    aliensContainer.children.forEach((alien) => {
-      if (alien.destroyed) return;
-
-      const roundedX = Math.round(alien.x / SPACING) * SPACING;
-
-      if (!columns[roundedX]) {
-        columns[roundedX] = [];
-      }
-
-      // Check if the alien is already in the column before adding.
-      if (!columns[roundedX].includes(alien)) {
-        columns[roundedX].push(alien);
-      }
-    });
-
     // Making the aliens container adaptive, so when the container reaches the end of the screen it goes to the last alien
-    aliensContainer.children.forEach((alien) => {
-      if (!alien.destroyed) {
-        let alienGlob = alien.getGlobalPosition();
-        leftMost = Math.min(leftMost, alienGlob.x);
-        rightMost = Math.max(rightMost, alienGlob.x);
-      }
-    });
-
-    // Iterate through the columns object to find the lowest alien in each
-    for (const col in columns) {
-      let lowestAlien = null;
-      let maxY = -Infinity;
-
-      columns[col].forEach((alien) => {
-        // Iterate over the aliens *in the column*
-        if (!alien.destroyed && alien.y > maxY) {
-          maxY = alien.y;
-          lowestAlien = alien;
+    aliensContainer.children.forEach((col) => {
+      col.children.forEach((alien) => {
+        if (!alien.destroyed) {
+          let alienGlob = alien.getGlobalPosition();
+          leftMost = Math.min(leftMost, alienGlob.x);
+          rightMost = Math.max(rightMost, alienGlob.x);
         }
       });
+    });
 
-      if (lowestAlien) {
-        lowestAlien.fire = true;
-      }
-
-      // Checking if the alien is at the end line, if it is game is over.
-      const globalPosAlien = lowestAlien.getGlobalPosition();
-      if (player.destroyed) return;
-      if (globalPosAlien.y >= player.y - 175) {
-        INFO_TEXT.text = `YOU LOST`;
-        gameRunning = false;
-      }
-    }
-
-    // Clear the columns object.
-    for (const col in columns) {
-      columns[col] = [];
-    }
-
+    // Bouncing the alien container
     if (leftMost <= 50) {
       aliensContainer.direction = 1;
       aliensContainer.y += 15;
@@ -244,24 +218,22 @@ let missle = null;
     }
 
     // Making the aliens shoot every secondsAlienShoot seconds
-    if ((intervalAlienMissile == secondsAlienShoot * 60)) {
-      let aliensToShoot = aliensContainer.children.filter(
-        (alien) => alien.fire
-      );
-      let randomAlienIndex = Math.floor(Math.random() * aliensToShoot.length);
-      // Check if there are any aliens to shoot
-      if (aliensToShoot.length > 0) {
-        const randomAlien = aliensToShoot[randomAlienIndex];
-        const alienGlobal = randomAlien.getGlobalPosition();
+    if (intervalAlienMissile == secondsAlienShoot * 60) {
+      const randomNum =
+        Math.trunc(Math.random() * aliensContainer.children.length) + 1;
+      let randomCol = aliensContainer.children[randomNum];
+      const chosenAlien = randomCol.children[randomCol.children.length - 1];
 
-        const alienMissileInstance = new alienMissile(
-          alienGlobal.x,
-          alienGlobal.y
-        );
-        app.stage.addChild(alienMissileInstance);
-        missiles.push(alienMissileInstance);
-        intervalAlienMissile = 0;
-      }
+      const chosenAlienGlobal = chosenAlien.getGlobalPosition();
+
+      const alienMissleStrike = new alienMissile(
+        chosenAlienGlobal.x,
+        chosenAlienGlobal.y
+      );
+
+      app.stage.addChild(alienMissleStrike);
+      missiles.push(alienMissleStrike);
+      intervalAlienMissile = 0;
     }
 
     // Tracking the alien missiles
@@ -325,28 +297,30 @@ let missle = null;
       }
 
       // Logic for aliens hit
-      aliensContainer.children.forEach((alien) => {
-        if (!missle) return;
+      aliensContainer.children.forEach((col) => {
+        col.children.forEach((alien) => {
+          if (!missle) return;
 
-        const globalAlienPos = alien.getGlobalPosition();
-        const distance = Math.hypot(
-          missle.x - globalAlienPos.x,
-          missle.y - globalAlienPos.y
-        );
-        if (distance < alien.width / 2 + missle.width / 2) {
-          isMissleOnScreen = false;
-          missle.die();
-          missle = null;
-          alien.die();
-          score += 10;
-          if (score == 650) {
-            INFO_TEXT.text = `YOU WON!`;
-            gameRunning = false;
-            return;
+          const globalAlienPos = alien.getGlobalPosition();
+          const distance = Math.hypot(
+            missle.x - globalAlienPos.x,
+            missle.y - globalAlienPos.y
+          );
+          if (distance < alien.width / 2 + missle.width / 2) {
+            isMissleOnScreen = false;
+            missle.die();
+            missle = null;
+            alien.die();
+            score += 10;
+            if (score == 650) {
+              INFO_TEXT.text = `YOU WON!`;
+              gameRunning = false;
+              return;
+            }
+            aliensSpeed += aliensSpeed * 0.043;
+            INFO_TEXT.text = `Score: ${score}, HP: ${player.hp}`;
           }
-          aliensSpeed += aliensSpeed * 0.043;
-          INFO_TEXT.text = `Score: ${score}, HP: ${player.hp}`;
-        }
+        });
       });
 
       // Logic for shield blocks hit
