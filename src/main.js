@@ -38,6 +38,14 @@ let SHOOT_TIMER = 2000;
 // Setting the speed of aliens
 let aliensSpeed = 0.75;
 
+// Counting time past in the ticker
+let intervalUFO = 0;
+let intervalAlienMissile = 0;
+
+// Seconds for actions
+let secondsUFO = 15;
+let secondsAlienShoot = 2;
+
 async function setup() {
   await app.init({
     background: `white`,
@@ -123,8 +131,16 @@ let missle = null;
   window.addEventListener("keydown", (key) => (keys[key.code] = true));
   window.addEventListener("keyup", (key) => (keys[key.code] = false));
 
-  // Player control ticker
+  const missiles = []; // Array to store active missiles
+
+  // Main game logic ticker
   app.ticker.add(() => {
+    if (!gameRunning) return;
+
+    intervalUFO++;
+    intervalAlienMissile++;
+
+    // Handling player movement
     if (keys["ArrowLeft"]) player.moveLeft(app);
     if (keys["ArrowRight"]) player.moveRight(app);
 
@@ -133,46 +149,18 @@ let missle = null;
       isMissleOnScreen = true;
       missle = new Missle(player.x, player.y);
       app.stage.addChild(missle);
+      keys["Space"] = false;
     }
-  });
 
-  const missiles = []; // Array to store active missiles
-
-  function alienShoot() {
-    if (!gameRunning) return;
-    let aliensToShoot = aliensContainer.children.filter((alien) => alien.fire);
-    let randomAlienIndex = Math.floor(Math.random() * aliensToShoot.length);
-    // Check if there are any aliens to shoot
-    if (aliensToShoot.length > 0) {
-      const randomAlien = aliensToShoot[randomAlienIndex];
-      const alienGlobal = randomAlien.getGlobalPosition();
-
-      const alienMissileInstance = new alienMissile(
-        alienGlobal.x,
-        alienGlobal.y
-      );
-      app.stage.addChild(alienMissileInstance);
-      missiles.push(alienMissileInstance);
-    }
-  }
-
-  setInterval(alienShoot, SHOOT_TIMER);
-
-  let interval = 0;
-  // Main game logic ticker
-  app.ticker.add(() => {
-    interval++;
-
-    if (interval == 15 * 60) {
+    // Sending UFO every secondsUFO seconds
+    if (intervalUFO == secondsUFO * 60) {
       const ufo = new UFO();
-    ufo.x = app.screen.width + ufo.width;
-    ufo.label = "ufo";
-    app.stage.addChild(ufo);
-    console.log("added");
-      interval = 0;
+      ufo.x = app.screen.width + ufo.width;
+      ufo.label = "ufo";
+      app.stage.addChild(ufo);
+      console.log("added");
+      intervalUFO = 0;
     }
-
-    if (!gameRunning) return;
 
     // Moving the UFO, if there is any
     if (app.stage.getChildByName("ufo")) {
@@ -232,7 +220,7 @@ let missle = null;
       if (lowestAlien) {
         lowestAlien.fire = true;
       }
-    
+
       // Checking if the alien is at the end line, if it is game is over.
       const globalPosAlien = lowestAlien.getGlobalPosition();
       if (player.destroyed) return;
@@ -253,6 +241,27 @@ let missle = null;
     } else if (rightMost >= app.screen.width - 50) {
       aliensContainer.direction = -1;
       aliensContainer.y += 15;
+    }
+
+    // Making the aliens shoot every secondsAlienShoot seconds
+    if ((intervalAlienMissile == secondsAlienShoot * 60)) {
+      let aliensToShoot = aliensContainer.children.filter(
+        (alien) => alien.fire
+      );
+      let randomAlienIndex = Math.floor(Math.random() * aliensToShoot.length);
+      // Check if there are any aliens to shoot
+      if (aliensToShoot.length > 0) {
+        const randomAlien = aliensToShoot[randomAlienIndex];
+        const alienGlobal = randomAlien.getGlobalPosition();
+
+        const alienMissileInstance = new alienMissile(
+          alienGlobal.x,
+          alienGlobal.y
+        );
+        app.stage.addChild(alienMissileInstance);
+        missiles.push(alienMissileInstance);
+        intervalAlienMissile = 0;
+      }
     }
 
     // Tracking the alien missiles
