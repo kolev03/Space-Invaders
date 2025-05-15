@@ -16,7 +16,8 @@ import Blocker from "./blockers";
 import alienMissile from "./alienMissle";
 import UFO from "./ufo";
 import Score from "./score";
-import OmegaRay from "./omegaRay";
+import OmegaRayDrop from "./omegaRayDrop";
+import ShieldDrop from "./shieldDrop";
 import GuidedMissile from "./guidedMissile";
 
 const app = new Application();
@@ -31,11 +32,19 @@ const SPACING = 55;
 const NUMBER_SHIELDS = 4;
 
 // Variables for adaptive scoreboard
-let INFO_TEXT;
 let score = 0;
-let playerHpText = 3;
+
+//Actions variables
+const keys = {};
+let isMissleOnScreen = false;
+let missle = null;
+const missiles = [];
 let guidedMissiles = [];
 let aliensTotal = [];
+let powerDrops = [];
+let shield = false;
+let omegaRay = false;
+let slayedAliens = 0;
 
 // Setting the speed of aliens
 let aliensSpeed = 0.75;
@@ -43,6 +52,7 @@ let aliensSpeed = 0.75;
 // Counting time past in the ticker
 let intervalUFO = 0;
 let intervalAlienMissile = 0;
+let intervalShield = 0;
 
 // Seconds for actions
 const secondsUFO = 15;
@@ -91,13 +101,14 @@ async function load() {
       alias: "guidedMissile",
       src: "assets/guidedMissile.jpg",
     },
+    {
+      alias: "shieldIcon",
+      src: "assets/shieldIcon.jpg",
+    },
   ];
 
   await Assets.load(assets);
 }
-
-let isMissleOnScreen = false;
-let missle = null;
 
 (async () => {
   await setup();
@@ -133,16 +144,15 @@ let missle = null;
   aliensContainer.y = 125;
 
   // Add defense blocks
-  let shieldContainer = new Container();
+  let blockersContainer = new Container();
   for (let i = 1; i <= NUMBER_SHIELDS; i++) {
     const block = new Blocker((app.screen.width / 5) * i, player.y - 125);
-    shieldContainer.addChild(block);
+    blockersContainer.addChild(block);
   }
 
-  app.stage.addChild(shieldContainer);
+  app.stage.addChild(blockersContainer);
 
   // Listening for key actions
-  const keys = {};
   window.addEventListener("keydown", (key) => (keys[key.code] = true));
   window.addEventListener("keyup", (key) => (keys[key.code] = false));
 
@@ -165,7 +175,7 @@ let missle = null;
   //     if (keyActions[key.code]) keyActions[key.code]();
   //   });
 
-  const missiles = []; // Array to store active missiles
+  // Array to store active missiles
 
   // Main game logic ticker
   app.ticker.add(() => {
@@ -173,13 +183,14 @@ let missle = null;
 
     intervalUFO++;
     intervalAlienMissile++;
+    intervalShield++;
 
     // Handling player movement
     if (keys["ArrowLeft"]) player.moveLeft(app);
     if (keys["ArrowRight"]) player.moveRight(app);
+    if (keys["ArrowDown"]) shield = true;
 
     if (keys["Space"]) {
-      keys["Space"] = false;
       if (isMissleOnScreen) return;
       isMissleOnScreen = true;
       missle = new Missle(player.x, player.y);
@@ -229,6 +240,13 @@ let missle = null;
       aliensContainer.direction = -1;
       aliensContainer.y += 15;
     }
+
+    //Storing all alive aliens
+    aliensContainer.children.forEach((col) => {
+      for (let index = 0; index < col.children.length; index++) {
+        aliensTotal.push(col.children[index]);
+      }
+    });
 
     // Making the aliens shoot every secondsAlienShoot seconds
     if (intervalAlienMissile == secondsAlienShoot * 60) {
@@ -284,18 +302,18 @@ let missle = null;
         break;
       }
 
-      // Checking if the shield is hit
-      shieldContainer.children.forEach((shield) => {
+      // Checking if the blockers are hit
+      blockersContainer.children.forEach((blocker) => {
         if (!missile.destroyed) {
           const distance = Math.hypot(
-            missile.x - shield.x,
-            missile.y - shield.y
+            missile.x - blocker.x,
+            missile.y - blocker.y
           );
-          if (distance < shield.width / 2 + missile.width / 2) {
+          if (distance < blocker.width / 2 + missile.width / 2) {
             missile.die();
-            shield.alpha -= 0.25;
-            shield.hp = shield.hp - 1;
-            if (shield.hp === 0) shield.die();
+            blocker.alpha -= 0.25;
+            blocker.hp = blocker.hp - 1;
+            if (blocker.hp === 0) blocker.die();
           }
         }
       });
@@ -313,8 +331,6 @@ let missle = null;
         guidedMissiles.splice(guidedMissiles.indexOf(missile), 1);
       }
     });
-
-    let guidedMissile;
     // Making the missle move, and dissappear if it gets outside the view
     if (missle) {
       missle.move();
@@ -343,6 +359,25 @@ let missle = null;
             missle = null;
             alien.die();
             score += 10;
+            slayedAliens++;
+
+            // Dropping random bonus, on 7 killed units
+            if (slayedAliens % 7 === 0) {
+              const randomBonus = Math.floor(Math.random() * 2) + 1;
+
+              if (randomBonus === 1) {
+                const drop = new ShieldDrop(globalAlienPos.x, globalAlienPos.y);
+                app.stage.addChild(drop);
+                powerDrops.push(drop);
+              } else {
+                const drop = new OmegaRayDrop(
+                  globalAlienPos.x,
+                  globalAlienPos.y
+                );
+                app.stage.addChild(drop);
+                powerDrops.push(drop);
+              }
+            }
 
             // Logic for spawning guided missiles
             if (score % 100 === 0) {
@@ -355,14 +390,14 @@ let missle = null;
                     aliensTotal.filter((alien) => alien.fire == true).length
                 ) + 1;
 
-              guidedMissile = new GuidedMissile(
+              const guidedMissile = new GuidedMissile(
                 player.x,
                 player.y,
                 totalAlienFilter[number]
-              ); // Target the alien
+              );
+              // Target the alien
               guidedMissiles.push(guidedMissile);
               app.stage.addChild(guidedMissile);
-              guidedMissile.label = "guidedMissle";
             }
 
             scoreDisplay.updateScore(score);
@@ -372,17 +407,17 @@ let missle = null;
       });
 
       // Logic for shield blocks hit
-      shieldContainer.children.forEach((shield) => {
+      blockersContainer.children.forEach((blocker) => {
         if (!missle) return;
 
-        const distance = Math.hypot(missle.x - shield.x, missle.y - shield.y);
-        if (distance < shield.width / 2 + missle.width / 2) {
+        const distance = Math.hypot(missle.x - blocker.x, missle.y - blocker.y);
+        if (distance < blocker.width / 2 + missle.width / 2) {
           isMissleOnScreen = false;
           missle.die();
           missle = null;
-          shield.alpha -= 0.25;
-          shield.hp = shield.hp - 1;
-          if (shield.hp === 0) shield.die();
+          blocker.alpha -= 0.25;
+          blocker.hp = blocker.hp - 1;
+          if (blocker.hp === 0) blocker.die();
         }
       });
 
@@ -407,18 +442,41 @@ let missle = null;
         }
       }
     }
-    if (aliensContainer.children.length == 0) {
-      gameRunning = false;
-      scoreDisplay.displayResult("WON");
+
+    //Moving any available power ups
+    //Moving any available power ups
+    for (let i = powerDrops.length - 1; i >= 0; i--) {
+      const drop = powerDrops[i];
+      if (!drop) continue; // Important: Check if drop is valid
+
+      drop.move();
+      if (drop.y - drop.height > app.screen.height) {
+        drop.disappear();
+        powerDrops.splice(i, 1);
+        continue;
+      }
+
+      const globalPlayerPos = player.getGlobalPosition();
+      const distance = Math.hypot(
+        drop.x - globalPlayerPos.x,
+        drop.y - globalPlayerPos.y
+      );
+
+      if (distance < player.width / 2 + drop.width / 2) {
+         if (drop instanceof ShieldDrop) {
+          console.log("Shield Drop Collected");
+          shield = true
+        } else if (drop instanceof OmegaRayDrop) {
+          console.log("Omega Ray Drop Collected");
+          omegaRay = true;
+        }
+        drop.disappear();
+        powerDrops.splice(i, 1);
+
+      }
     }
 
     // Checking if all the aliens are killed
-
-    aliensContainer.children.forEach((col) => {
-      for (let index = 0; index < col.children.length; index++) {
-        aliensTotal.push(col.children[index]);
-      }
-    });
     if (aliensTotal.length == 0) scoreDisplay.displayResult("WON");
   });
 })();
