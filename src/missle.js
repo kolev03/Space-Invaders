@@ -3,8 +3,7 @@ import { Sprite, Texture } from "pixi.js";
 const WIDTH = 30; 
 const HEIGHT = 70;
 
-const SPEED = 75
-const HP = 4
+const SPEED = 25
 
 class Missle extends Sprite {
   get isOutOfBounds() {
@@ -17,7 +16,6 @@ class Missle extends Sprite {
     this.height = HEIGHT;
     this.x = x;
     this.y = y;
-    this.hp = HP;
     this.anchor.set(0.5);
   }
 

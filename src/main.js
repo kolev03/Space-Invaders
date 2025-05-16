@@ -41,21 +41,23 @@ const COLS = 13;
 const SPACING = 55;
 const NUMBER_SHIELDS = 4;
 
-// Variables for adaptive scoreboard
-let score = 0;
+// Seconds for actions
+const SECONDS_UFO = 15;
+const SECONDS_ALIENS_SHOOT = 2;
+const ACTIVE_SHIELD_SECONDS = 6;
 
 //Actions variables
+let score = 0;
 const keys = {};
-let isMissleOnScreen = false;
-let missle = null;
 const missiles = [];
 let guidedMissiles = [];
-let aliensTotal = [];
+let aliensAlive = [];
 let powerDrops = [];
+let isMissleOnScreen = false;
+let missle = null;
 let shield = false;
 let omegaRay = false;
-let slayedAliens = 0;
-const activeShieldSeconds = 6;
+let killedAliensForDrops = 0;
 
 // Setting the speed of aliens
 let aliensSpeed = 0.75;
@@ -65,10 +67,6 @@ let intervalUFO = 0;
 let intervalAlienMissile = 0;
 let intervalShield = 0;
 let intervalLaser = 0;
-
-// Seconds for actions
-const secondsUFO = 15;
-const secondsAlienShoot = 2;
 
 async function setup() {
   await app.init({
@@ -169,45 +167,12 @@ async function startGame() {
 
   app.stage.addChild(blockersContainer);
 
-  // Listening for key actions
+  // Listening for key assosiated with player movement
   window.addEventListener("keydown", (key) => (keys[key.code] = true));
   window.addEventListener("keyup", (key) => (keys[key.code] = false));
 
-  //  const keyActions = {
-  //     ArrowLeft: () => {
-  //       player.moveLeft(app);
-  //     },
-  //     ArrowRight: () => {
-  //       player.moveRight(app);
-  //     },
-  //     Space: () => {
-  //       if (isMissleOnScreen) return;
-  //       isMissleOnScreen = true;
-  //       missle = new Missle(player.x, player.y);
-  //       app.stage.addChild(missle);
-  //     },
-  //   };
-
-  //   window.addEventListener("keydown", (key) => {
-  //     if (keyActions[key.code]) keyActions[key.code]();
-  //   });
-
-  // Array to store active missiles
-
-  // Main game logic ticker
-  app.ticker.add(() => {
-    if (!gameRunning) return;
-
-    intervalUFO++;
-    intervalAlienMissile++;
-    if (shield === true) intervalShield++;
-
-    // Handling player movement
-    if (keys["ArrowLeft"]) player.moveLeft(app);
-    if (keys["ArrowRight"]) player.moveRight(app);
-    if (keys["ArrowDown"]) shield = true;
-
-    if (keys["Space"]) {
+  window.addEventListener("keydown", function (e) {
+    if (e.code === "Space") {
       if (omegaRay === true) {
         const globalPlayerPos = player.getGlobalPosition();
         const laser = new Laser(
@@ -227,9 +192,22 @@ async function startGame() {
       missle = new Missle(player.x, player.y);
       app.stage.addChild(missle);
     }
+  });
 
-    // Sending UFO every secondsUFO seconds
-    if (intervalUFO == secondsUFO * 60) {
+  // Main game logic ticker
+  app.ticker.add(() => {
+    if (!gameRunning) return;
+
+    intervalUFO++;
+    intervalAlienMissile++;
+    if (shield === true) intervalShield++;
+
+    // // Handling player movement
+    if (keys["ArrowLeft"]) player.moveLeft(app);
+    if (keys["ArrowRight"]) player.moveRight(app);
+
+    // Sending UFO every SECONDS_UFO seconds
+    if (intervalUFO == SECONDS_UFO * 60) {
       const ufo = new UFO();
       ufo.x = app.screen.width + ufo.width;
       ufo.label = "ufo";
@@ -272,16 +250,16 @@ async function startGame() {
       aliensContainer.y += 15;
     }
 
-    //Storing all alive aliens
-    aliensTotal = [];
+    // Storing all alive aliens
+    aliensAlive = [];
     aliensContainer.children.forEach((col) => {
       for (let index = 0; index < col.children.length; index++) {
-        aliensTotal.push(col.children[index]);
+        aliensAlive.push(col.children[index]);
       }
     });
 
-    // Making the aliens shoot every secondsAlienShoot seconds
-    if (intervalAlienMissile == secondsAlienShoot * 60) {
+    // Making the aliens shoot every SECONDS_ALIENS_SHOOT seconds
+    if (intervalAlienMissile == SECONDS_ALIENS_SHOOT * 60) {
       const randomNum = Math.floor(
         Math.random() * aliensContainer.children.length
       );
@@ -289,7 +267,6 @@ async function startGame() {
         let randomCol = aliensContainer.children[randomNum];
         if (randomCol.children && randomCol.children.length > 0) {
           const chosenAlien = randomCol.children[randomCol.children.length - 1];
-          chosenAlien.fire = true;
           const chosenAlienGlobal = chosenAlien.getGlobalPosition();
           const alienMissleStrike = new alienMissile(
             chosenAlienGlobal.x,
@@ -322,7 +299,7 @@ async function startGame() {
 
       // Checking if the player is hit
       if (distance < player.width / 2 + missile.width / 2) {
-        if (intervalShield >= activeShieldSeconds * 60) {
+        if (shield && intervalShield >= ACTIVE_SHIELD_SECONDS * 60) {
           player.shielded(false);
           shield = false;
           intervalShield = 0;
@@ -438,10 +415,10 @@ async function startGame() {
             missle = null;
             alien.die();
             score += 10;
-            slayedAliens++;
+            killedAliensForDrops++;
 
             // Dropping random bonus, on 7 killed units
-            if (slayedAliens % 7 === 0) {
+            if (killedAliensForDrops % 7 === 0) {
               const randomBonus = Math.floor(Math.random() * 2) + 1;
 
               if (randomBonus === 1) {
@@ -460,23 +437,29 @@ async function startGame() {
 
             // Logic for spawning guided missiles
             if (score % 100 === 0) {
-              const totalAlienFilter = aliensTotal.filter(
-                (alien) => alien.fire == true
-              );
-              const number =
-                Math.floor(
-                  Math.random() *
-                    aliensTotal.filter((alien) => alien.fire == true).length
-                ) + 1;
+              const bottomAliens = [];
 
-              const guidedMissile = new GuidedMissile(
-                player.x,
-                player.y,
-                totalAlienFilter[number]
-              );
-              // Target the alien
-              guidedMissiles.push(guidedMissile);
-              app.stage.addChild(guidedMissile);
+              aliensContainer.children.forEach((col) => {
+                for (let i = col.children.length - 1; i >= 0; i--) {
+                  const alien = col.children[i];
+                  if (!alien.destroyed) {
+                    bottomAliens.push(alien);
+                    break; // Only the last (bottom) alive alien
+                  }
+                }
+              });
+
+              if (bottomAliens.length > 0) {
+                const targetAlien =
+                  bottomAliens[Math.floor(Math.random() * bottomAliens.length)];
+                const guidedMissile = new GuidedMissile(
+                  player.x,
+                  player.y,
+                  targetAlien
+                );
+                guidedMissiles.push(guidedMissile);
+                app.stage.addChild(guidedMissile);
+              }
             }
 
             scoreDisplay.updateScore(score);
@@ -554,6 +537,6 @@ async function startGame() {
     }
 
     // Checking if all the aliens are killed
-    if (aliensTotal.length == 0) scoreDisplay.displayResult("WON");
+    if (aliensAlive.length == 0) scoreDisplay.displayResult("WON");
   });
 }
