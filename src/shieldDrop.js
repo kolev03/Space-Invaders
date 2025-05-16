@@ -16,7 +16,7 @@ export default class ShieldDrop extends Sprite {
     this.y += SPEED;
   }
 
-  disappear(){
+  disappear() {
     this.destroy();
   }
 }

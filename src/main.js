@@ -1,3 +1,12 @@
+document
+  .getElementById("start-game")
+  .addEventListener("click", async function () {
+    document.getElementById("start-menu").style.display = "none";
+    document.getElementById("game-container").style.display = "block";
+    startGame();
+  });
+
+// PixiJs Game Logic
 import {
   Application,
   Assets,
@@ -17,8 +26,9 @@ import alienMissile from "./alienMissle";
 import UFO from "./ufo";
 import Score from "./score";
 import OmegaRayDrop from "./omegaRayDrop";
-import ShieldDrop from "./shieldDrop";
+import ShieldDrop from "./ShieldDrop";
 import GuidedMissile from "./guidedMissile";
+import Laser from "./laser";
 
 const app = new Application();
 
@@ -45,6 +55,7 @@ let powerDrops = [];
 let shield = false;
 let omegaRay = false;
 let slayedAliens = 0;
+const activeShieldSeconds = 6;
 
 // Setting the speed of aliens
 let aliensSpeed = 0.75;
@@ -53,6 +64,7 @@ let aliensSpeed = 0.75;
 let intervalUFO = 0;
 let intervalAlienMissile = 0;
 let intervalShield = 0;
+let intervalLaser = 0;
 
 // Seconds for actions
 const secondsUFO = 15;
@@ -64,7 +76,8 @@ async function setup() {
     resizeTo: window,
   });
 
-  document.body.appendChild(app.canvas);
+  const gameContainer = document.getElementById("game-container");
+  gameContainer.appendChild(app.canvas);
 }
 
 async function load() {
@@ -105,18 +118,22 @@ async function load() {
       alias: "shieldIcon",
       src: "assets/shieldIcon.jpg",
     },
+    {
+      alias: "ray",
+      src: "assets/ray.png",
+    },
   ];
 
   await Assets.load(assets);
 }
 
-(async () => {
+async function startGame() {
   await setup();
   await load();
 
   addBackground(app);
 
-  const player = new Player(app.screen.width / 2, app.screen.height);
+  const player = new Player(app.screen.width / 2, app.screen.height - 30);
   app.stage.addChild(player);
 
   const scoreDisplay = new Score(30, 15); // Create a new Score object
@@ -183,7 +200,7 @@ async function load() {
 
     intervalUFO++;
     intervalAlienMissile++;
-    intervalShield++;
+    if (shield === true) intervalShield++;
 
     // Handling player movement
     if (keys["ArrowLeft"]) player.moveLeft(app);
@@ -191,6 +208,20 @@ async function load() {
     if (keys["ArrowDown"]) shield = true;
 
     if (keys["Space"]) {
+      if (omegaRay === true) {
+        const globalPlayerPos = player.getGlobalPosition();
+        const laser = new Laser(
+          globalPlayerPos.x,
+          globalPlayerPos.y,
+          app.screen.height
+        );
+        laser.label = "laser";
+        app.stage.addChild(laser);
+        player.omegaRayStrike();
+        player.omegaRayShake(false);
+        omegaRay = false;
+        isMissleOnScreen = true;
+      }
       if (isMissleOnScreen) return;
       isMissleOnScreen = true;
       missle = new Missle(player.x, player.y);
@@ -242,6 +273,7 @@ async function load() {
     }
 
     //Storing all alive aliens
+    aliensTotal = [];
     aliensContainer.children.forEach((col) => {
       for (let index = 0; index < col.children.length; index++) {
         aliensTotal.push(col.children[index]);
@@ -290,13 +322,27 @@ async function load() {
 
       // Checking if the player is hit
       if (distance < player.width / 2 + missile.width / 2) {
+        if (intervalShield >= activeShieldSeconds * 60) {
+          player.shielded(false);
+          shield = false;
+          intervalShield = 0;
+        }
+
+        if (shield) {
+          missile.die();
+          missiles.splice(i, 1);
+          break;
+        }
+
         player.hp -= 1;
         scoreDisplay.updateHp(player.hp);
+
         if (player.hp === 0) {
           player.die();
           gameRunning = false;
           scoreDisplay.updateScore("LOST");
         }
+
         missile.die();
         missiles.splice(i, 1);
         break;
@@ -319,6 +365,38 @@ async function load() {
       });
     }
 
+    // Making the laser to hit
+    if (app.stage.getChildByName("laser")) {
+      const laser = app.stage.getChildByName("laser");
+      if (!laser.destroyed) {
+        //added to prevent error
+        aliensContainer.children.forEach((col) => {
+          col.children.forEach((alien) => {
+            if (alien.destroyed) return;
+            const laserBounds = laser.getBounds();
+            const alienBounds = alien.getBounds();
+            if (
+              laserBounds.x < alienBounds.x + alienBounds.width &&
+              laserBounds.x + laserBounds.width > alienBounds.x &&
+              laserBounds.y < alienBounds.y + alienBounds.height &&
+              laserBounds.y + laserBounds.height > alienBounds.y
+            ) {
+              alien.die();
+              score += 10;
+            }
+            scoreDisplay.updateScore(score);
+          });
+        });
+      }
+      intervalLaser++;
+      if (intervalLaser >= 10) {
+        intervalLaser = 0;
+        laser.die();
+        app.stage.removeChild(laser);
+        isMissleOnScreen = false;
+      }
+    }
+
     // Making the guided missile move
     guidedMissiles.forEach((missile) => {
       missile.move();
@@ -331,6 +409,7 @@ async function load() {
         guidedMissiles.splice(guidedMissiles.indexOf(missile), 1);
       }
     });
+
     // Making the missle move, and dissappear if it gets outside the view
     if (missle) {
       missle.move();
@@ -353,7 +432,7 @@ async function load() {
             missle.y - globalAlienPos.y
           );
 
-          if (distance < alien.width / 2 + missle.width / 2) {
+          if (distance < alien.width / 2 + missle.width) {
             isMissleOnScreen = false;
             missle.die();
             missle = null;
@@ -444,7 +523,6 @@ async function load() {
     }
 
     //Moving any available power ups
-    //Moving any available power ups
     for (let i = powerDrops.length - 1; i >= 0; i--) {
       const drop = powerDrops[i];
       if (!drop) continue; // Important: Check if drop is valid
@@ -463,20 +541,19 @@ async function load() {
       );
 
       if (distance < player.width / 2 + drop.width / 2) {
-         if (drop instanceof ShieldDrop) {
-          console.log("Shield Drop Collected");
-          shield = true
+        if (drop instanceof ShieldDrop) {
+          player.shielded(true);
+          shield = true;
         } else if (drop instanceof OmegaRayDrop) {
-          console.log("Omega Ray Drop Collected");
+          player.omegaRayShake(true);
           omegaRay = true;
         }
         drop.disappear();
         powerDrops.splice(i, 1);
-
       }
     }
 
     // Checking if all the aliens are killed
     if (aliensTotal.length == 0) scoreDisplay.displayResult("WON");
   });
-})();
+}

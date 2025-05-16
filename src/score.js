@@ -3,18 +3,18 @@ import { Text, Container, Graphics } from "pixi.js";
 export default class Score {
   constructor(x, y) {
     this.score = 0;
-    this.hp = 3; // Добавяме начална стойност за HP
+    this.hp = 3; 
 
     this.container = new Container();
     this.container.x = x;
     this.container.y = y;
 
     this.text = new Text(`Score: ${this.score}, HP: ${this.hp}`, {
-      // Display the HP
       fontSize: 34,
       fill: "#ffffff",
       fontFamily: "Arial",
     });
+    
 
     const bg = new Graphics();
     bg.fill({ color: 0x000000 });
@@ -31,13 +31,13 @@ export default class Score {
 
   updateScore(newScore) {
     this.score = newScore;
-    this.text.text = `Score: ${this.score}, HP: ${this.hp}`; // Update the text
+    this.text.text = `Score: ${this.score}, HP: ${this.hp}`; 
     this.updateBackgroundSize();
   }
 
   updateHp(newHp) {
     this.hp = newHp;
-    this.text.text = `Score: ${this.score}, HP: ${this.hp}`; // Update the text
+    this.text.text = `Score: ${this.score}, HP: ${this.hp}`;
     this.updateBackgroundSize();
   }
 
