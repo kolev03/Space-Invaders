@@ -17,6 +17,8 @@ class Player extends Sprite {
     this.anchor.set(0.5);
 
     this.speed = 15;
+
+    
   }
 
   moveLeft() {
@@ -81,6 +83,25 @@ class Player extends Sprite {
         this._shield = null;
       }
     }
+  }
+
+  takesDmg() {
+    
+    const originalTint = this.tint;
+
+    gsap.to(this, {
+      rotation: 0.1,
+      duration: 0.06,
+      repeat: 1,
+      yoyo: true,
+      ease: "sine.inOut",
+    });
+
+    this.tint = 0xff6666;
+
+    gsap.delayedCall(0.12, () => {
+      this.tint = originalTint;
+    });
   }
 
   die() {

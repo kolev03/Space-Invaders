@@ -36,8 +36,8 @@ const app = new Application();
 let gameRunning = true;
 
 // Setting the numbers of aliens and the spacing between them
-const ROWS = 5;
-const COLS = 13;
+const ROWS = 2;
+const COLS = 2;
 const SPACING = 55;
 const NUMBER_SHIELDS = 4;
 
@@ -58,6 +58,7 @@ let missle = null;
 let shield = false;
 let omegaRay = false;
 let killedAliensForDrops = 0;
+let currentStage = 1;
 
 // Setting the speed of aliens
 let aliensSpeed = 0.75;
@@ -134,11 +135,10 @@ async function startGame() {
   const player = new Player(app.screen.width / 2, app.screen.height - 30);
   app.stage.addChild(player);
 
-  const scoreDisplay = new Score(30, 15); // Create a new Score object
-  scoreDisplay.x = app.screen.width / 2;
+  const scoreDisplay = new Score(app.screen.width / 2, 15);
   scoreDisplay.addTo(app.stage);
 
-  const aliensContainer = new AliensContainer();
+  let aliensContainer = new AliensContainer();
 
   // Add aliens to the container
   for (let col = 0; col < COLS; col++) {
@@ -298,13 +298,12 @@ async function startGame() {
       );
 
       // Checking if the player is hit
+      if (shield && intervalShield >= ACTIVE_SHIELD_SECONDS * 60) {
+        player.shielded(false);
+        shield = false;
+        intervalShield = 0;
+      }
       if (distance < player.width / 2 + missile.width / 2) {
-        if (shield && intervalShield >= ACTIVE_SHIELD_SECONDS * 60) {
-          player.shielded(false);
-          shield = false;
-          intervalShield = 0;
-        }
-
         if (shield) {
           missile.die();
           missiles.splice(i, 1);
@@ -312,6 +311,7 @@ async function startGame() {
         }
 
         player.hp -= 1;
+        player.takesDmg();
         scoreDisplay.updateHp(player.hp);
 
         if (player.hp === 0) {
@@ -346,7 +346,6 @@ async function startGame() {
     if (app.stage.getChildByName("laser")) {
       const laser = app.stage.getChildByName("laser");
       if (!laser.destroyed) {
-        //added to prevent error
         aliensContainer.children.forEach((col) => {
           col.children.forEach((alien) => {
             if (alien.destroyed) return;
@@ -360,6 +359,7 @@ async function startGame() {
             ) {
               alien.die();
               score += 10;
+              killedAliensForDrops++;
             }
             scoreDisplay.updateScore(score);
           });
@@ -403,23 +403,18 @@ async function startGame() {
         col.children.forEach((alien) => {
           if (!missle) return;
 
-          const globalAlienPos = alien.getGlobalPosition();
-          const distance = Math.hypot(
-            missle.x - globalAlienPos.x,
-            missle.y - globalAlienPos.y
-          );
-
-          if (distance < alien.width / 2 + missle.width) {
+          if (checkCollision(missle, alien)) {
             isMissleOnScreen = false;
             missle.die();
             missle = null;
+            const globalAlienPos = alien.getGlobalPosition();
             alien.die();
             score += 10;
             killedAliensForDrops++;
-
             // Dropping random bonus, on 7 killed units
-            if (killedAliensForDrops % 7 === 0) {
-              const randomBonus = Math.floor(Math.random() * 2) + 1;
+            if (killedAliensForDrops >= 7) {
+              killedAliensForDrops = 0;
+              const randomBonus = Math.floor(Math.random() * 1) + 1;
 
               if (randomBonus === 1) {
                 const drop = new ShieldDrop(globalAlienPos.x, globalAlienPos.y);
@@ -436,31 +431,31 @@ async function startGame() {
             }
 
             // Logic for spawning guided missiles
-            if (score % 100 === 0) {
-              const bottomAliens = [];
+            // if (score % 100 === 0) {
+            //   const bottomAliens = [];
 
-              aliensContainer.children.forEach((col) => {
-                for (let i = col.children.length - 1; i >= 0; i--) {
-                  const alien = col.children[i];
-                  if (!alien.destroyed) {
-                    bottomAliens.push(alien);
-                    break; // Only the last (bottom) alive alien
-                  }
-                }
-              });
+            //   aliensContainer.children.forEach((col) => {
+            //     for (let i = col.children.length - 1; i >= 0; i--) {
+            //       const alien = col.children[i];
+            //       if (!alien.destroyed) {
+            //         bottomAliens.push(alien);
+            //         break; // Only the last (bottom) alive alien
+            //       }
+            //     }
+            //   });
 
-              if (bottomAliens.length > 0) {
-                const targetAlien =
-                  bottomAliens[Math.floor(Math.random() * bottomAliens.length)];
-                const guidedMissile = new GuidedMissile(
-                  player.x,
-                  player.y,
-                  targetAlien
-                );
-                guidedMissiles.push(guidedMissile);
-                app.stage.addChild(guidedMissile);
-              }
-            }
+            //   if (bottomAliens.length > 0) {
+            //     const targetAlien =
+            //       bottomAliens[Math.floor(Math.random() * bottomAliens.length)];
+            //     const guidedMissile = new GuidedMissile(
+            //       player.x,
+            //       player.y,
+            //       targetAlien
+            //     );
+            //     guidedMissiles.push(guidedMissile);
+            //     app.stage.addChild(guidedMissile);
+            //   }
+            // }
 
             scoreDisplay.updateScore(score);
             aliensSpeed += aliensSpeed * 0.043;
@@ -471,9 +466,7 @@ async function startGame() {
       // Logic for shield blocks hit
       blockersContainer.children.forEach((blocker) => {
         if (!missle) return;
-
-        const distance = Math.hypot(missle.x - blocker.x, missle.y - blocker.y);
-        if (distance < blocker.width / 2 + missle.width / 2) {
+        if (checkCollision(missle, blocker)) {
           isMissleOnScreen = false;
           missle.die();
           missle = null;
@@ -487,14 +480,8 @@ async function startGame() {
       if (app.stage.getChildByName("ufo")) {
         if (!missle) return;
         const ufo = app.stage.getChildByName("ufo");
-        const globalUfo = ufo.getGlobalPosition();
 
-        const distance = Math.hypot(
-          missle.x - globalUfo.x,
-          missle.y - globalUfo.y
-        );
-
-        if (distance < ufo.width / 2 + missle.width / 2) {
+        if (checkCollision(missle, ufo)) {
           isMissleOnScreen = false;
           missle.die();
           missle = null;
@@ -517,13 +504,7 @@ async function startGame() {
         continue;
       }
 
-      const globalPlayerPos = player.getGlobalPosition();
-      const distance = Math.hypot(
-        drop.x - globalPlayerPos.x,
-        drop.y - globalPlayerPos.y
-      );
-
-      if (distance < player.width / 2 + drop.width / 2) {
+      if (checkCollision(drop, player)) {
         if (drop instanceof ShieldDrop) {
           player.shielded(true);
           shield = true;
@@ -536,7 +517,51 @@ async function startGame() {
       }
     }
 
-    // Checking if all the aliens are killed
-    if (aliensAlive.length == 0) scoreDisplay.displayResult("WON");
+    if (aliensAlive.length === 0) {
+      if (currentStage >= 10) {
+        scoreDisplay.displayResult("WON GAME ");
+        return;
+      }
+
+      currentStage++;
+      scoreDisplay.displayResult("STAGE " + currentStage);
+
+      // Remove old container
+      app.stage.removeChild(aliensContainer);
+      aliensContainer.destroy({ children: true });
+
+      aliensContainer = new AliensContainer();
+
+      for (let col = 0; col < COLS; col++) {
+        const container = new Container();
+
+        for (let row = 0; row < ROWS; row++) {
+          const alien = new Alien(col * SPACING, row * SPACING - 40);
+          container.addChild(alien);
+        }
+
+        aliensContainer.addChild(container);
+      }
+
+      // Add to stage and reposition
+      app.stage.addChild(aliensContainer);
+      aliensContainer.x = (app.screen.width - aliensContainer.width) / 2;
+      aliensContainer.y = 125;
+    }
   });
+}
+
+function checkCollision(fire, object) {
+  if (object.destroyed) return;
+  const objectGlobalPos = object.getGlobalPosition();
+  const distance = Math.hypot(
+    fire.x - objectGlobalPos.x,
+    fire.y - objectGlobalPos.y
+  );
+
+  if (distance < object.width / 2 + fire.width / 2) {
+    return true;
+  } else {
+    return false;
+  }
 }
