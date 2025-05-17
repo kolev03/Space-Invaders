@@ -2,7 +2,7 @@ import { Sprite, Texture } from "pixi.js";
 
 const WIDTH = 30;
 const HEIGHT = 70;
-const SPEED = 5;
+const SPEED = 12;
 
 export default class GuidedMissile extends Sprite {
   constructor(x, y, target) {
@@ -35,5 +35,9 @@ export default class GuidedMissile extends Sprite {
 
   die() {
     this.destroy();
+  }
+
+  changeTarget(newTarget) {
+    this.target = newTarget;
   }
 }

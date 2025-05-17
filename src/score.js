@@ -35,11 +35,19 @@ export default class Score {
   }
 
   updateScore(newScore) {
+    const oldScore = this.score;
+    if (newScore === oldScore) {
+      this.text.text = `Score: ${newScore}`;
+      return;
+    }
+
+    // real change → blink
     this.score = newScore;
-    this.text.text = `Score: ${this.score}`;
+    this.text.text = `Score: ${newScore}`;
     this.updateHpIcons();
 
-    const originalTint = this.text.tint;
+    const originalTint = 0xffffff; // white
+    this.text.tint = 0x66ff66; // green
 
     gsap.to(this.text, {
       y: 10,
@@ -48,8 +56,6 @@ export default class Score {
       yoyo: true,
       repeat: 1,
     });
-
-    this.text.tint = 0x66ff66;
 
     gsap.delayedCall(0.12, () => {
       this.text.tint = originalTint;
@@ -63,7 +69,7 @@ export default class Score {
 
   displayResult(result) {
     if (result.includes("STAGE")) this.text.text = `${result}`;
-    else { 
+    else {
       this.text.text = `YOU ${result}`;
     }
     for (const icon of this.hpIcons) {
