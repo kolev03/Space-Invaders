@@ -1,6 +1,6 @@
 import { Sprite, Texture } from "pixi.js";
 
-const SIZE = 100;
+const SIZE = 140;
 
 class Blocker extends Sprite {
   constructor(x, y) {
