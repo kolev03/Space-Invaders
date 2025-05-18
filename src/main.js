@@ -30,10 +30,10 @@ const app = new Application();
 let gameRunning = true;
 
 // Setting the numbers of aliens and the spacing between them
-const ROWS = 2;
-const COLS = 2;
+const ROWS = 5;
+const COLS = 13;
 const SPACING = 55;
-let NUMBER_SHIELDS = 3;
+const NUMBER_SHIELDS = 4;
 
 // Seconds for actions
 const SECONDS_UFO = 15;
@@ -46,8 +46,8 @@ export const gameState = {
 };
 
 let score = 0;
-const keys = {};
-const missiles = [];
+let keys = {};
+let missiles = [];
 let guidedMissiles = [];
 let aliensAlive = [];
 let powerDrops = [];
@@ -68,6 +68,7 @@ let intervalAlienMissile = 0;
 let intervalShield = 0;
 let intervalLaser = 0;
 
+let once = true;
 async function setup() {
   await app.init({
     background: `white`,
@@ -76,13 +77,15 @@ async function setup() {
 
   const gameContainer = document.getElementById("game-container");
   gameContainer.appendChild(app.canvas);
+
+  once = false;
 }
 
 async function load() {
   const assets = [
     {
       alias: "background",
-      src: "assets/galaxy.webp",
+      src: "assets/background.png",
     },
     {
       alias: "playerShip",
@@ -97,8 +100,20 @@ async function load() {
       src: "assets/alien1.png",
     },
     {
-      alias: "blocker1",
-      src: "assets/BLOCKER.png",
+      alias: "blocker4/4",
+      src: "assets/blockerFull.png",
+    },
+    {
+      alias: "blocker4/3",
+      src: "assets/blockerLittleDmg.png",
+    },
+    {
+      alias: "blocker4/2",
+      src: "assets/blockerDecentDmg.png",
+    },
+    {
+      alias: "blocker4/1",
+      src: "assets/blockerDestroyed.png",
     },
     {
       alias: "ufo",
@@ -126,7 +141,9 @@ async function load() {
 }
 
 export async function startGame() {
-  await setup();
+  gameRunning = true;
+  if (once === true) await setup();
+
   await load();
 
   addBackground(app);
@@ -165,7 +182,7 @@ export async function startGame() {
   for (let i = 1; i <= NUMBER_SHIELDS; i++) {
     const block = new Blocker(
       (app.screen.width / (NUMBER_SHIELDS + 1)) * i,
-      player.y - 125
+      player.y - 90
     );
     blockersContainer.addChild(block);
   }
@@ -330,6 +347,7 @@ export async function startGame() {
           player.die();
           gameRunning = false;
           displayEndResult(false);
+          resetGame();
         }
 
         missile.die();
@@ -346,8 +364,8 @@ export async function startGame() {
           );
           if (distance < blocker.width / 2 + missile.width / 2) {
             missile.die();
-            blocker.alpha -= 0.25;
             blocker.hp = blocker.hp - 1;
+            blocker.updateTexture();
             if (blocker.hp === 0) blocker.die();
           }
         }
@@ -578,9 +596,10 @@ export async function startGame() {
 
     // Checking if the game is won
     if (aliensAlive.length === 0) {
-      if (currentStage >= 1) {
-        scoreDisplay.displayResult("WON GAME ");
+      if (currentStage >= 10) {
+        scoreDisplay.displayResult(true);
         displayEndResult(true);
+        resetGame();
         return;
       }
 
@@ -646,6 +665,7 @@ function checkCollisionByBounds(fire, object) {
  * IF result = false -> LOST
  */
 function displayEndResult(result) {
+  console.log(result);
   const endScreen = document.getElementById("end-screen");
   document.getElementById("end-screen-result").textContent = `${
     result ? "YOU WIN!" : "GAME OVER"
@@ -657,7 +677,48 @@ function displayEndResult(result) {
     const tl = gsap.timeline();
     tl.to(endScreen, {
       duration: 0.35,
-      x: "100%"
+      x: "100%",
     });
   }, 500);
+}
+
+function resetGame() {
+  // 1) Stop the game loop
+  gameRunning = false;
+  app.ticker.stop();
+
+  // 2) Clear the stage entirely (removes player, aliens, UI, etc.)
+
+  // 3) Reset all counters & flags
+  score = 0;
+  killedAliensForDrops = 0;
+  aliensKilledForGuidedMissile = 0;
+  aliensSpeed = 0.75; // back to your base speed
+  intervalUFO = 0;
+  intervalAlienMissile = 0;
+  intervalShield = 0;
+  intervalLaser = 0;
+  isMissleOnScreen = false;
+  missle = null;
+  shield = false;
+  omegaRay = false;
+
+  // 4) Clear input state
+  keys = {};
+
+  // 5) Destroy & empty all projectile/bonus arrays
+  missiles.forEach((m) => m.die());
+  missiles = [];
+
+  guidedMissiles.forEach((m) => m.die());
+  guidedMissiles = [];
+
+  powerDrops.forEach((p) => p.disappear());
+  powerDrops = [];
+
+  aliensAlive = [];
+  currentStage = 1;
+
+  // 7) Restart ticker so you can play again
+  gameRunning = true;
 }

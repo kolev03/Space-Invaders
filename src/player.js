@@ -1,7 +1,7 @@
 import { Sprite, Texture, Graphics } from "pixi.js";
 import gsap from "gsap";
 
-const WIDTH = 150;
+const WIDTH = 125;
 const HEIGHT = 100;
 const HP = 3;
 
