@@ -11,6 +11,12 @@
     />
   </head>
   <body>
+    
+    <div id="transition-overlay">
+      <h1>Ready?</h2>
+      <h2 class="go-text">GO!</h2>
+    </div>
+
     <div id="start-menu">
       <h1>Space Invaders</h1>
       <h2>Created by Petar Kolev</h2>
@@ -32,6 +38,13 @@
     </div>
 
     <div id="game-container" style="display: none"></div>
+
+    <div id="end-screen">
+    <h1 id="end-screen-result"></h1>
+    <p id="end-screen-score">Your score: ${score}</p>
+    <button id="back-home">Back to Home</button>
+  </div>
+
   </body>
   <script type="module" src="src/domManipulation.js"></script>
   <script type="module" src="src/main.js"></script>

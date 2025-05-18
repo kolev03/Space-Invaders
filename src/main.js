@@ -22,6 +22,7 @@ import ShieldDrop from "./ShieldDrop";
 import GuidedMissile from "./guidedMissile";
 import Laser from "./laser";
 import StageDisplay from "./stage";
+import gsap from "gsap";
 
 const app = new Application();
 
@@ -29,14 +30,14 @@ const app = new Application();
 let gameRunning = true;
 
 // Setting the numbers of aliens and the spacing between them
-const ROWS = 5;
+const ROWS = 2;
 const COLS = 2;
 const SPACING = 55;
-const NUMBER_SHIELDS = 3;
+let NUMBER_SHIELDS = 3;
 
 // Seconds for actions
 const SECONDS_UFO = 15;
-const SECONDS_ALIENS_SHOOT = 2;
+let SECONDS_ALIENS_SHOOT = 2;
 const ACTIVE_SHIELD_SECONDS = 6;
 
 //Actions variables
@@ -203,6 +204,7 @@ export async function startGame() {
     player.hp = 1;
     scoreDisplay.updateHp(player.hp);
     aliensSpeed += 1.5;
+    SECONDS_ALIENS_SHOOT = 1.25;
   }
 
   // Main game logic ticker
@@ -327,7 +329,7 @@ export async function startGame() {
         if (player.hp === 0) {
           player.die();
           gameRunning = false;
-          scoreDisplay.updateScore("LOST");
+          displayEndResult(false);
         }
 
         missile.die();
@@ -574,15 +576,16 @@ export async function startGame() {
       }
     }
 
+    // Checking if the game is won
     if (aliensAlive.length === 0) {
-      if (currentStage >= 10) {
+      if (currentStage >= 1) {
         scoreDisplay.displayResult("WON GAME ");
+        displayEndResult(true);
         return;
       }
 
       currentStage++;
 
-      // Remove old container
       app.stage.removeChild(aliensContainer);
       aliensContainer.destroy({ children: true });
 
@@ -636,4 +639,25 @@ function checkCollisionByBounds(fire, object) {
     fireBounds.y + fireBounds.height > objectBounds.y
   )
     return true;
+}
+
+/**
+ * IF result = true -> WON
+ * IF result = false -> LOST
+ */
+function displayEndResult(result) {
+  const endScreen = document.getElementById("end-screen");
+  document.getElementById("end-screen-result").textContent = `${
+    result ? "YOU WIN!" : "GAME OVER"
+  }`;
+  document.getElementById(
+    "end-screen-score"
+  ).textContent = `Your score: ${score}`;
+  setTimeout(() => {
+    const tl = gsap.timeline();
+    tl.to(endScreen, {
+      duration: 0.35,
+      x: "100%"
+    });
+  }, 500);
 }
