@@ -1,11 +1,3 @@
-document
-  .getElementById("start-game")
-  .addEventListener("click", async function () {
-    document.getElementById("start-menu").style.display = "none";
-    document.getElementById("game-container").style.display = "block";
-    startGame();
-  });
-
 // PixiJs Game Logic
 import {
   Application,
@@ -29,6 +21,7 @@ import OmegaRayDrop from "./omegaRayDrop";
 import ShieldDrop from "./ShieldDrop";
 import GuidedMissile from "./guidedMissile";
 import Laser from "./laser";
+import StageDisplay from "./stage";
 
 const app = new Application();
 
@@ -37,9 +30,9 @@ let gameRunning = true;
 
 // Setting the numbers of aliens and the spacing between them
 const ROWS = 5;
-const COLS = 13;
+const COLS = 2;
 const SPACING = 55;
-const NUMBER_SHIELDS = 4;
+const NUMBER_SHIELDS = 3;
 
 // Seconds for actions
 const SECONDS_UFO = 15;
@@ -47,6 +40,10 @@ const SECONDS_ALIENS_SHOOT = 2;
 const ACTIVE_SHIELD_SECONDS = 6;
 
 //Actions variables
+export const gameState = {
+  difficulty: "Normal",
+};
+
 let score = 0;
 const keys = {};
 const missiles = [];
@@ -127,7 +124,7 @@ async function load() {
   await Assets.load(assets);
 }
 
-async function startGame() {
+export async function startGame() {
   await setup();
   await load();
 
@@ -138,6 +135,9 @@ async function startGame() {
 
   const scoreDisplay = new Score(app.screen.width / 2, 15);
   scoreDisplay.addTo(app.stage);
+
+  const stageDisplay = new StageDisplay();
+  app.stage.addChild(stageDisplay.getDisplayObject());
 
   let aliensContainer = new AliensContainer();
 
@@ -162,7 +162,10 @@ async function startGame() {
   // Add defense blocks
   let blockersContainer = new Container();
   for (let i = 1; i <= NUMBER_SHIELDS; i++) {
-    const block = new Blocker((app.screen.width / 5) * i, player.y - 125);
+    const block = new Blocker(
+      (app.screen.width / (NUMBER_SHIELDS + 1)) * i,
+      player.y - 125
+    );
     blockersContainer.addChild(block);
   }
 
@@ -194,6 +197,13 @@ async function startGame() {
       app.stage.addChild(missle);
     }
   });
+
+  // Adapting the difficulty
+  if (gameState.difficulty === "Hard") {
+    player.hp = 1;
+    scoreDisplay.updateHp(player.hp);
+    aliensSpeed += 1.5;
+  }
 
   // Main game logic ticker
   app.ticker.add(() => {
@@ -571,7 +581,6 @@ async function startGame() {
       }
 
       currentStage++;
-      scoreDisplay.displayResult("STAGE " + currentStage);
 
       // Remove old container
       app.stage.removeChild(aliensContainer);
@@ -590,6 +599,7 @@ async function startGame() {
         aliensContainer.addChild(container);
       }
 
+      stageDisplay.update(currentStage);
       // Add to stage and reposition
       app.stage.addChild(aliensContainer);
       aliensContainer.x = (app.screen.width - aliensContainer.width) / 2;

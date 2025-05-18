@@ -3,6 +3,7 @@ import gsap from "gsap";
 
 const WIDTH = 150;
 const HEIGHT = 100;
+const HP = 3;
 
 const PADDING = 80;
 
@@ -13,12 +14,9 @@ class Player extends Sprite {
     this.height = HEIGHT;
     this.x = x;
     this.y = y - HEIGHT / 2;
-    this.hp = 3;
+    this.hp = HP;
     this.anchor.set(0.5);
-
     this.speed = 15;
-
-    
   }
 
   moveLeft() {
@@ -86,7 +84,6 @@ class Player extends Sprite {
   }
 
   takesDmg() {
-    
     const originalTint = this.tint;
 
     gsap.to(this, {

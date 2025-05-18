@@ -5,22 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Space Invaders</title>
     <link rel="stylesheet" href="style.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="start-menu">
       <h1>Space Invaders</h1>
       <h2>Created by Petar Kolev</h2>
-      <div class="buttons">
 
+      <div class="buttons">
         <button id="instructions">Instructions</button>
         <button id="start-game">Start Game</button>
-
-        <div class="instructions-container"></div>
       </div>
+
+      <div class="difficulty-container">
+        <h3>Choose difficulty</h3>
+        <div class="difficulty-selection">
+          <h4 id="normal-difficulty-button">Easy</h4>
+          <h4 id="hard-difficulty-button">Hard</h4>
+        </div>
+      </div>
+
+      <div class="instructions-container"></div>
     </div>
 
-    <div id="game-container" style="display: none;"></div>
+    <div id="game-container" style="display: none"></div>
   </body>
+  <script type="module" src="src/domManipulation.js"></script>
   <script type="module" src="src/main.js"></script>
 </html>

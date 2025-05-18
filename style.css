@@ -8,6 +8,7 @@
   font-weight: 400;
   font-style: normal;
   user-select: none;
+  transition: 0.3s ease;
 }
 
 body {
@@ -45,24 +46,50 @@ h2 {
 
 #instructions,
 #start-game {
-  font-size: 5rem;
+  font-size: 4rem;
   border: none;
   background-color: transparent;
-  transition: 0.3s ease;
   width: max-content;
   color: white;
 }
 
 #instructions:hover,
 #start-game:hover {
-  font-size: 6rem;
   cursor: pointer;
-  transition: 0.3s ease;
 }
 
-@media screen and (max-width: 900px) {
-    html{
-      font-size: 12px;
+.difficulty-container {
+  display: none;
+}
 
-    }
+.difficulty-selection {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  font-size: 3rem;
+  gap: 1.5rem;
+}
+
+#normal-difficulty-button:hover,
+#hard-difficulty-button:hover {
+  color: rgb(22, 210, 22);
+  cursor: pointer;
+  font-size: 3.5rem;
+}
+
+#hard-difficulty-button:hover {
+  color: rgb(188, 50, 12);
+}
+
+
+@media screen and (min-width: 1000px) {
+  html {
+    font-size: 20px;
+  }
+}
+
+@media screen and (max-width: 700px) {
+  html {
+    font-size: 12px;
+  }
 }
