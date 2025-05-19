@@ -11,16 +11,23 @@ const normalDifficultyButton = document.getElementById(
 const hardDifficultyButton = document.getElementById("hard-difficulty-button");
 const buttonsContainer = document.querySelector(".buttons");
 const instructionButton = document.getElementById("instructions");
+const instructionsPanel = document.querySelector(".instructions-container");
 const startGameButton = document.getElementById("start-game");
 const difficultyContainer = document.querySelector(".difficulty-container");
 const overlay = document.getElementById("transition-overlay");
 const goText = document.querySelector(".go-text");
 const backToHome = document.getElementById("back-home");
 const endScreen = document.getElementById("end-screen");
-
+const closeInstructionButton = document.querySelector(".close-instructions");
 // Animation when clicking Start Game
 let on = true;
-startGameButton.addEventListener("click", async function () {
+
+instructionButton.addEventListener("click", function () {
+  instructionsPanel.style.display = "block";
+  document.getElementById("start-menu").classList.add("blurred-dark");
+});
+
+startGameButton.addEventListener("click", function () {
   on = !on;
   applyStartPageStyles();
 });
@@ -51,6 +58,11 @@ backToHome.addEventListener("click", () => {
   });
   on = !on;
   applyStartPageStyles();
+});
+
+closeInstructionButton.addEventListener("click", function () {
+  instructionsPanel.style.display = "none";
+  document.getElementById("start-menu").classList.remove("blurred-dark");
 });
 
 function applyStartPageStyles() {

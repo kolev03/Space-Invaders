@@ -129,6 +129,70 @@ body {
   color: rgb(188, 50, 12);
 }
 
+.instructions-container {
+  position: absolute;
+  top: 8%;
+  left: 20%;
+  background-image: url("assets/instructions.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  width: 60%;
+  height: 84%;
+  color: black;
+  display: none;
+  padding: 0 20px;
+}
+
+.instructions-container h4 {
+  margin-top: 13vh;
+  font-size: 1.5rem;
+}
+.instructions-container h4:last-of-type {
+  margin-top: 5vh;
+  font-size: 1.5rem;
+}
+
+.instructions-container p {
+  margin: 0.75rem auto 0;
+  font-size: 3.25vh;
+  max-width: 80%;
+}
+
+.instructions-container hr {
+  width: 50%;
+  margin: 1.25rem auto;
+  border: black solid 0.2vh;
+}
+
+.close-instructions {
+  background-color: transparent;
+  padding: 10px;
+  border: none;
+  color: rgb(136, 29, 29);
+  font-size: 4vh;
+  margin-top: 2vh;
+  text-decoration: underline;
+}
+
+.close-instructions:hover{
+  cursor: pointer;
+}
+
+.gamma-ray-text {
+  color: rgb(232, 121, 3);
+}
+
+.shield-text {
+  color: rgb(0, 42, 212);
+}
+
+.blurred-dark {
+  filter: blur(3px) brightness(90%);
+  transition: filter 0.3s ease;
+  pointer-events: none; /* Prevent interaction while blurred */
+}
+
 @media screen and (min-width: 1000px) {
   html {
     font-size: 20px;
@@ -140,7 +204,6 @@ body {
     font-size: 12px;
   }
 }
-
 
 @keyframes shine {
   0% {
