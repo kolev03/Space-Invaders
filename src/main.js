@@ -608,8 +608,24 @@ export async function startGame() {
       }
     }
 
-    // Checking if the game is won
+    // Checking if aliens have reacher the blockers, if they have, game is LOST.
+    blockersContainer.children.forEach((blocker) => {
+      aliensAlive.forEach((alien) => {
+        if (alien.destroyed) return;
+
+        const alienBottom = alien.getGlobalPosition().y + alien.height / 2;
+        const blockerTop = blocker.getGlobalPosition().y - blocker.height / 2;
+
+        if (alienBottom >= blockerTop) {
+          displayEndResult(false);
+          resetGame();
+          gameRunning = false;
+        }
+      });
+    });
+
     if (aliensAlive.length === 0) {
+      // Checking if the game is won
       if (currentStage >= 10) {
         scoreDisplay.displayResult(true);
         displayEndResult(true);
