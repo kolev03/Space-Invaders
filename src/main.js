@@ -18,7 +18,7 @@ import alienMissile from "./alienMissle.js";
 import UFO from "./ufo.js";
 import Score from "./score.js";
 import OmegaRayDrop from "./omegaRayDrop.js";
-import ShieldDrop from "./ShieldDrop.js";
+import ShieldDrop from "./shieldDrop.js";
 import GuidedMissile from "./guidedMissile.js";
 import Laser from "./laser.js";
 import StageDisplay from "./stage.js";
