@@ -8,20 +8,20 @@ import {
   Graphics,
   applyMatrix,
 } from "pixi.js";
-import { addBackground } from "./addBackground";
-import Player from "./player";
-import Alien from "./alien";
-import AliensContainer from "./aliensContainer";
-import Missle from "./missle";
-import Blocker from "./blockers";
-import alienMissile from "./alienMissle";
-import UFO from "./ufo";
-import Score from "./score";
-import OmegaRayDrop from "./omegaRayDrop";
-import ShieldDrop from "./ShieldDrop";
-import GuidedMissile from "./guidedMissile";
-import Laser from "./laser";
-import StageDisplay from "./stage";
+import { addBackground } from "./addBackground.js";
+import Player from "./player.js";
+import Alien from "./alien.js";
+import AliensContainer from "./aliensContainer.js";
+import Missle from "./missle.js";
+import Blocker from "./blockers.js";
+import alienMissile from "./alienMissle.js";
+import UFO from "./ufo.js";
+import Score from "./score.js";
+import OmegaRayDrop from "./omegaRayDrop.js";
+import ShieldDrop from "./ShieldDrop.js";
+import GuidedMissile from "./guidedMissile.js";
+import Laser from "./laser.js";
+import StageDisplay from "./stage.js";
 import gsap from "gsap";
 
 const app = new Application();
