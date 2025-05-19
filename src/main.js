@@ -355,7 +355,6 @@ export async function startGame() {
           player.die();
           gameRunning = false;
           displayEndResult(false);
-          resetGame();
         }
 
         missile.die();
@@ -618,7 +617,6 @@ export async function startGame() {
 
         if (alienBottom >= blockerTop) {
           displayEndResult(false);
-          resetGame();
           gameRunning = false;
         }
       });
@@ -629,7 +627,6 @@ export async function startGame() {
       if (currentStage >= 10) {
         scoreDisplay.displayResult(true);
         displayEndResult(true);
-        resetGame();
         return;
       }
 
