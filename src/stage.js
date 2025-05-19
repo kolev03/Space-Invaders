@@ -17,34 +17,12 @@ export default class StageDisplay {
       fontFamily: "Jersey 10",
     });
 
-    this.bg = new Graphics(); 
-    this.bg.beginFill(0x000000);
-    this.bg.drawRoundedRect(
-      0,
-      0,
-      this.text.width + 20,
-      this.text.height + 20,
-      10
-    );
-    this.bg.endFill();
-    this.bg.resolution = 10;
 
-    this.container.addChild(this.bg);
     this.container.addChild(this.text);
   }
 
   update(stageNumber) {
     this.text.text = `STAGE ${stageNumber}`;
-    this.bg.clear();
-    this.bg.beginFill(0x000000);
-    this.bg.drawRoundedRect(
-      0,
-      0,
-      this.text.width + 20,
-      this.text.height + 20,
-      10
-    );
-    this.bg.endFill();
   }
 
   getDisplayObject() {

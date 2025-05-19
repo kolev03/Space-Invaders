@@ -132,6 +132,10 @@ async function load() {
       src: "assets/guidedMissile.png",
     },
     {
+      alias: "shield",
+      src: "assets/shield.png",
+    },
+    {
       alias: "shieldIcon",
       src: "assets/shieldIcon.png",
     },
@@ -504,7 +508,7 @@ export async function startGame() {
             // Dropping random bonus, on 7 killed units
             if (killedAliensForDrops >= 7) {
               killedAliensForDrops = 0;
-              const randomBonus = Math.floor(Math.random() * 2) + 1;
+              const randomBonus = Math.floor(Math.random() * 1) + 1;
 
               let drop;
               if (randomBonus === 1) {

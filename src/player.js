@@ -67,13 +67,17 @@ class Player extends Sprite {
     if (active) {
       if (this._shield) return; // Already active
 
-      const shield = new Graphics();
-      shield.circle(0, 0, this.width * 1.5);
-      shield.stroke({ width: 22, color: 0x003366 });
-      shield.zIndex = 1; // Behind player
+      const shield = Sprite.from("shield");
+      shield.anchor.set(0.5);
+      shield.width = 500;
+      shield.height = 500;
+      console.log(shield);
 
-      this._shield = shield;
+      shield.x = 0; // relative to player
+      shield.y = -225; // 50 pixels above player's center
+
       this.addChild(shield);
+      this._shield = shield;
     } else {
       if (this._shield) {
         this.removeChild(this._shield);
