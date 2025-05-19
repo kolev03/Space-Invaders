@@ -1,12 +1,6 @@
 import { Container, Graphics, Text } from "pixi.js";
 
-/**
- * Displays the current stage number in the top-left corner.
- * Usage:
- *   const stageDisplay = new StageDisplay();
- *   app.stage.addChild(stageDisplay.getDisplayObject());
- *   stageDisplay.update(2);
- */
+
 export default class StageDisplay {
   /**
    * @param {number} x - Horizontal position (default 10)

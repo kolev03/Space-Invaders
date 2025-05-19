@@ -1,9 +1,9 @@
 import { Sprite, Texture } from "pixi.js";
 
-const WIDTH = 30; 
-const HEIGHT = 70;
+const WIDTH = 50; 
+const HEIGHT = 50;
 
-const SPEED = 25
+const SPEED = 13
 
 class Missle extends Sprite {
   get isOutOfBounds() {

@@ -3,6 +3,8 @@ import gsap from "gsap";
 import { gameState } from "./main";
 
 const startPage = document.getElementById("start-menu");
+const titleText = document.querySelector(".title-text");
+const creatorText = document.querySelector(".creator-text");
 const normalDifficultyButton = document.getElementById(
   "normal-difficulty-button"
 );
@@ -52,9 +54,9 @@ backToHome.addEventListener("click", () => {
 });
 
 function applyStartPageStyles() {
-  startPage.style.color = on ? "white" : "#525252";
+  titleText.style.opacity = on ? 1 : 0.3;
+  creatorText.style.opacity = on ? 1 : 0.3;
   difficultyContainer.style.display = on ? "none" : "block";
-  difficultyContainer.style.color = on ? "#525252" : "white";
   instructionButton.style.fontSize = on ? "4rem" : "3rem";
   instructionButton.style.color = on ? "white" : "#525252";
   startGameButton.style.fontSize = on ? "4rem" : "3rem";

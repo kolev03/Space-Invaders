@@ -1,7 +1,7 @@
 import { Sprite, Texture } from "pixi.js";
 
 const SPEED = 3;
-const SIZE = 30;
+const SIZE = 65;
 
 export default class ShieldDrop extends Sprite {
   constructor(x, y) {

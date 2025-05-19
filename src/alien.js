@@ -1,9 +1,10 @@
 import { Sprite, Texture } from "pixi.js";
 
-const SIZE = 50;
+const SIZE = 65;
 
 class Alien extends Sprite {
   constructor(x, y) {
+    const randomNum = Math.floor(Math.random() * 3) + 1
     super(Texture.from("alien1"));
     this.width = SIZE;
     this.height = SIZE;

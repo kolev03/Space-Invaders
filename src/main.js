@@ -92,8 +92,12 @@ async function load() {
       src: "assets/space-ship.png",
     },
     {
+      alias: "alienMissile",
+      src: "assets/alienMissile.png",
+    },
+    {
       alias: "missle",
-      src: "assets/missle.jpg",
+      src: "assets/missile.png",
     },
     {
       alias: "alien1",
@@ -121,15 +125,15 @@ async function load() {
     },
     {
       alias: "omegaRay",
-      src: "assets/omegaRay.jpg",
+      src: "assets/omegaRay.png",
     },
     {
       alias: "guidedMissile",
-      src: "assets/guidedMissile.jpg",
+      src: "assets/guidedMissile.png",
     },
     {
       alias: "shieldIcon",
-      src: "assets/shieldIcon.jpg",
+      src: "assets/shieldIcon.png",
     },
     {
       alias: "ray",
@@ -182,7 +186,7 @@ export async function startGame() {
   for (let i = 1; i <= NUMBER_SHIELDS; i++) {
     const block = new Blocker(
       (app.screen.width / (NUMBER_SHIELDS + 1)) * i,
-      player.y - 90
+      player.y - 110
     );
     blockersContainer.addChild(block);
   }
@@ -405,6 +409,15 @@ export async function startGame() {
               scoreDisplay.updateScore(score);
             }
           }
+
+          // Check if missile is hit\
+          if (missle) {
+            if (checkCollisionByBounds(laser, missle)) {
+              isMissleOnScreen = false;
+              missle.die();
+              missle = null;
+            }
+          }
         });
       }
       intervalLaser++;
@@ -493,18 +506,14 @@ export async function startGame() {
               killedAliensForDrops = 0;
               const randomBonus = Math.floor(Math.random() * 2) + 1;
 
+              let drop;
               if (randomBonus === 1) {
-                const drop = new ShieldDrop(globalAlienPos.x, globalAlienPos.y);
-                app.stage.addChild(drop);
-                powerDrops.push(drop);
+                drop = new ShieldDrop(globalAlienPos.x, globalAlienPos.y);
               } else {
-                const drop = new OmegaRayDrop(
-                  globalAlienPos.x,
-                  globalAlienPos.y
-                );
-                app.stage.addChild(drop);
-                powerDrops.push(drop);
+                drop = new OmegaRayDrop(globalAlienPos.x, globalAlienPos.y);
               }
+              app.stage.addChild(drop);
+              powerDrops.push(drop);
             }
 
             // Logic for spawning guided missiles
@@ -547,8 +556,8 @@ export async function startGame() {
           isMissleOnScreen = false;
           missle.die();
           missle = null;
-          blocker.alpha -= 0.25;
           blocker.hp = blocker.hp - 1;
+          blocker.updateTexture();
           if (blocker.hp === 0) blocker.die();
         }
       });
@@ -585,6 +594,7 @@ export async function startGame() {
         if (drop instanceof ShieldDrop) {
           player.shielded(true);
           shield = true;
+          intervalShield = 0;
         } else if (drop instanceof OmegaRayDrop) {
           player.omegaRayShake(true);
           omegaRay = true;

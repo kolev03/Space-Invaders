@@ -1,4 +1,5 @@
 import { Sprite } from "pixi.js";
+import gsap from "gsap";
 
 export function addBackground(app) {
   const background = Sprite.from(`background`);
@@ -12,4 +13,7 @@ export function addBackground(app) {
   background.y = app.screen.height / 2;
 
   app.stage.addChild(background);
+
+  const radius = 10;
+  const duration = 6;
 }

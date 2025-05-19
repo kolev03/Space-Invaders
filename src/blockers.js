@@ -9,7 +9,7 @@ class Blocker extends Sprite {
     this.y = y;
     this.width = SIZE;
     this.height = SIZE;
-    this.hp = 4;
+    this.hp = 12;
     this.anchor.set(0.5);
   }
 
@@ -19,7 +19,8 @@ class Blocker extends Sprite {
 
   updateTexture() {
     if (this.hp === 0) return;
-    this.texture = Texture.from(`blocker4/${this.hp}`);
+    const state = Math.max(0, 3 - Math.floor((12 - this.hp) / 4));
+    this.texture = Texture.from(`blocker4/${state}`);
   }
 }
 

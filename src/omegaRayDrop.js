@@ -1,7 +1,7 @@
 import { Sprite, Texture } from "pixi.js";
 
 const SPEED = 3;
-const SIZE = 30;
+const SIZE = 60;
 
 export default class OmegaRayDrop extends Sprite {
   constructor(x, y) {

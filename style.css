@@ -56,14 +56,30 @@ body {
   background-size: cover;
   color: white;
 }
-h1 {
+
+.title-text {
   margin-top: 2rem;
   font-size: 10rem;
+  font-family: "Jersey 10", sans-serif;
+  background: linear-gradient(90deg, #ffffff, #770575, #ffffff);
+  background-size: 200% auto;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: shine 4s linear infinite;
 }
 
-h2 {
+.creator-text {
   font-size: 5rem;
   margin-top: -1rem;
+  font-family: "Jersey 10", sans-serif;
+  background: linear-gradient(90deg, #ffffff, #430342, #ffffff);
+  background-size: 200% auto;
+  color: transparent;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: shine 4s linear infinite;
+  animation-delay: 0.3s;
 }
 
 .buttons {
@@ -122,5 +138,15 @@ h2 {
 @media screen and (max-width: 700px) {
   html {
     font-size: 12px;
+  }
+}
+
+
+@keyframes shine {
+  0% {
+    background-position: -100% center;
+  }
+  100% {
+    background-position: 100% center;
   }
 }
