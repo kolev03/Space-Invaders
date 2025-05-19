@@ -149,6 +149,10 @@ async function load() {
 }
 
 export async function startGame() {
+  const backgroundMusic = new Audio("audio/battleMusic.mp3");
+  backgroundMusic.volume = 0.4;
+  backgroundMusic.play();
+
   gameRunning = true;
   if (once === true) await setup();
 
@@ -218,6 +222,8 @@ export async function startGame() {
         isMissleOnScreen = true;
       }
       if (isMissleOnScreen) return;
+      let laserSound = new Audio("audio/laserSound.mp3");
+      laserSound.play();
       isMissleOnScreen = true;
       missle = new Missle(player.x, player.y);
       app.stage.addChild(missle);
