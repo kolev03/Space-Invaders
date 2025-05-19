@@ -354,6 +354,8 @@ export async function startGame() {
         }
 
         player.hp -= 1;
+        let takingDmgSound = new Audio("audio/takingDmg.wav");
+        takingDmgSound.play();
         player.takesDmg();
         scoreDisplay.updateHp(player.hp);
 
