@@ -25,6 +25,7 @@ import StageDisplay from "./stage";
 import gsap from "gsap";
 
 const app = new Application();
+const backgroundMusic = new Audio("audio/battleMusic.mp3");
 
 // Game is running
 let gameRunning = true;
@@ -149,7 +150,6 @@ async function load() {
 }
 
 export async function startGame() {
-  const backgroundMusic = new Audio("audio/battleMusic.mp3");
   backgroundMusic.volume = 0.4;
   backgroundMusic.play();
 
@@ -698,7 +698,8 @@ function checkCollisionByBounds(fire, object) {
  * IF result = false -> LOST
  */
 function displayEndResult(result) {
-  console.log(result);
+  backgroundMusic.currentTime = 0;
+  backgroundMusic.pause();
   const endScreen = document.getElementById("end-screen");
   document.getElementById("end-screen-result").textContent = `${
     result ? "YOU WIN!" : "GAME OVER"

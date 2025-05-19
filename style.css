@@ -57,6 +57,18 @@ body {
   color: white;
 }
 
+.sound-button {
+  font-size: 3vh;
+  margin-top: 1vh;
+  background-color: transparent;
+  color: white;
+  border: none;
+}
+
+.sound-button:hover {
+  cursor: pointer;
+}
+
 .title-text {
   margin-top: 2rem;
   font-size: 10rem;
@@ -89,7 +101,7 @@ body {
   justify-content: center;
   align-items: center;
   width: min-content;
-  margin: 7rem auto 0;
+  margin: 6vh auto 0;
 }
 
 #instructions,
@@ -175,7 +187,7 @@ body {
   text-decoration: underline;
 }
 
-.close-instructions:hover{
+.close-instructions:hover {
   cursor: pointer;
 }
 

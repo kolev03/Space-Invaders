@@ -2,7 +2,7 @@ import { startGame } from "./main";
 import gsap from "gsap";
 import { gameState } from "./main";
 
-const startPage = document.getElementById("start-menu");
+const soundButton = document.querySelector(".sound-button");
 const titleText = document.querySelector(".title-text");
 const creatorText = document.querySelector(".creator-text");
 const normalDifficultyButton = document.getElementById(
@@ -21,16 +21,26 @@ const endScreen = document.getElementById("end-screen");
 const closeInstructionButton = document.querySelector(".close-instructions");
 
 // Animation when clicking Start Game
-let on = true;
+let instructionPopped = true;
 
 //Adding background music
 const backgroundMusic = new Audio("audio/startMenuMusic.mp3");
 backgroundMusic.loop = true;
 backgroundMusic.volume = 0.5;
-backgroundMusic.play();
+let musicOn = false;
 
 //Adding click souns
 const clickSound = new Audio("audio/clickSound.mp3");
+
+soundButton.addEventListener("click", function () {
+  musicOn = !musicOn;
+  if (musicOn) backgroundMusic.play();
+  else {
+    backgroundMusic.pause();
+  }
+
+  soundButton.textContent = `BACKGROUND SOUND: ${musicOn ? "ON" : "OFF"}`;
+});
 
 instructionButton.addEventListener("click", function () {
   getClickSound();
@@ -39,7 +49,7 @@ instructionButton.addEventListener("click", function () {
 });
 
 startGameButton.addEventListener("click", function () {
-  on = !on;
+  instructionPopped = !instructionPopped;
   getClickSound();
   applyStartPageStyles();
 });
@@ -71,7 +81,7 @@ backToHome.addEventListener("click", () => {
       document.getElementById("start-menu").style.display = "block";
     },
   });
-  on = !on;
+  instructionPopped = !instructionPopped;
   applyStartPageStyles();
   backgroundMusic.play();
 });
@@ -83,13 +93,15 @@ closeInstructionButton.addEventListener("click", function () {
 });
 
 function applyStartPageStyles() {
-  titleText.style.opacity = on ? 1 : 0.3;
-  creatorText.style.opacity = on ? 1 : 0.3;
-  difficultyContainer.style.display = on ? "none" : "block";
-  instructionButton.style.fontSize = on ? "4rem" : "3rem";
-  instructionButton.style.color = on ? "white" : "#525252";
-  startGameButton.style.fontSize = on ? "4rem" : "3rem";
-  buttonsContainer.style.margin = on ? "7rem auto 0" : "3rem auto 0";
+  titleText.style.opacity = instructionPopped ? 1 : 0.3;
+  creatorText.style.opacity = instructionPopped ? 1 : 0.3;
+  difficultyContainer.style.display = instructionPopped ? "none" : "block";
+  instructionButton.style.fontSize = instructionPopped ? "4rem" : "3rem";
+  instructionButton.style.color = instructionPopped ? "white" : "#525252";
+  startGameButton.style.fontSize = instructionPopped ? "4rem" : "3rem";
+  buttonsContainer.style.margin = instructionPopped
+    ? "6vh auto 0"
+    : "3rem auto 0";
 }
 
 // Animation for switching between home and game pages
