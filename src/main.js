@@ -86,63 +86,63 @@ async function load() {
   const assets = [
     {
       alias: "background",
-      src: "assets/background.png",
+      src: "public/assets/background.png",
     },
     {
       alias: "playerShip",
-      src: "assets/space-ship.png",
+      src: "public/assets/space-ship.png",
     },
     {
       alias: "alienMissile",
-      src: "assets/alienMissile.png",
+      src: "public/assets/alienMissile.png",
     },
     {
       alias: "missle",
-      src: "assets/missile.png",
+      src: "public/assets/missile.png",
     },
     {
       alias: "alien1",
-      src: "assets/alien1.png",
+      src: "public/assets/alien1.png",
     },
     {
       alias: "blocker4/4",
-      src: "assets/blockerFull.png",
+      src: "public/assets/blockerFull.png",
     },
     {
       alias: "blocker4/3",
-      src: "assets/blockerLittleDmg.png",
+      src: "public/assets/blockerLittleDmg.png",
     },
     {
       alias: "blocker4/2",
-      src: "assets/blockerDecentDmg.png",
+      src: "public/assets/blockerDecentDmg.png",
     },
     {
       alias: "blocker4/1",
-      src: "assets/blockerDestroyed.png",
+      src: "public/assets/blockerDestroyed.png",
     },
     {
       alias: "ufo",
-      src: "assets/ufo.png",
+      src: "public/assets/ufo.png",
     },
     {
       alias: "omegaRay",
-      src: "assets/omegaRay.png",
+      src: "public/assets/omegaRay.png",
     },
     {
       alias: "guidedMissile",
-      src: "assets/guidedMissile.png",
+      src: "public/assets/guidedMissile.png",
     },
     {
       alias: "shield",
-      src: "assets/shield.png",
+      src: "public/assets/shield.png",
     },
     {
       alias: "shieldIcon",
-      src: "assets/shieldIcon.png",
+      src: "public/assets/shieldIcon.png",
     },
     {
       alias: "ray",
-      src: "assets/ray.png",
+      src: "public/assets/ray.png",
     },
   ];
 
@@ -150,13 +150,12 @@ async function load() {
 }
 
 export async function startGame() {
+  await load();
   backgroundMusic.volume = 0.4;
   backgroundMusic.play();
 
   gameRunning = true;
   if (once === true) await setup();
-
-  await load();
 
   addBackground(app);
 
