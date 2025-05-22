@@ -707,7 +707,7 @@ function displayEndResult(result) {
   }`;
   document.getElementById(
     "end-screen-score"
-  ).textContent = `Your score: ${score}.  Note: To play the game again, restart the tab.`;
+  ).textContent = `Your score: ${score}.`;
   setTimeout(() => {
     const tl = gsap.timeline();
     tl.to(endScreen, {
