@@ -9,7 +9,7 @@ const PADDING = 80;
 
 class Player extends Sprite {
   constructor(x, y) {
-    super(Texture.from("assets/space-ship.png"));
+    super(Texture.from("playerShip"));
     this.width = WIDTH;
     this.height = HEIGHT;
     this.x = x;

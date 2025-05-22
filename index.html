@@ -9,17 +9,15 @@
       href="https://fonts.googleapis.com/css2?family=Jersey+10&display=swap"
       rel="stylesheet"
     />
-    <link rel="shortcut icon" href="assets/favicon.png" type="image/x-icon">
+    <link rel="shortcut icon" href="assets/favicon.png" type="image/x-icon" />
   </head>
   <body>
-    
     <div id="transition-overlay">
-      <h1>Ready?</h2>
+      <h1>Ready?</h1>
       <h2 class="go-text">GO!</h2>
     </div>
-    
-    <div id="start-menu">
 
+    <div id="start-menu">
       <button class="sound-button">BACKGROUND SOUND: OFF</button>
       <p>(Click to change)</p>
 
@@ -38,30 +36,44 @@
           <h4 id="hard-difficulty-button">Hard</h4>
         </div>
       </div>
-
     </div>
     <div class="instructions-container">
-     
-      <h4> HOW TO PLAY THE GAME:</h1>
-      <p>The core gameplay is faithful to the classic **Space Invaders**. Up to 10 waves of alien hordes spawn at the top of the screen and move downward, shifting direction each time they reach the edge. You have four blockers positioned between you and the aliens, each with 16 HP. Your goal is to eliminate the invaders before they reach your position.</p> 
+      <h4>HOW TO PLAY THE GAME:</h4>
+      <p>
+        The core gameplay is faithful to the classic **Space Invaders**. Up to
+        10 waves of alien hordes spawn at the top of the screen and move
+        downward, shifting direction each time they reach the edge. You have
+        four blockers positioned between you and the aliens, each with 16 HP.
+        Your goal is to eliminate the invaders before they reach your position.
+      </p>
 
-      <hr>
-      
-      <h4>Special Actions:</h4> 
-      <p>Every 7th alien you destroy with your basic attack will drop a power-up, every 10th alien you killed launches an auto-target missile. The drop can either be a <span style="color: rgb(232, 121, 3);">shield</span> or a <span style="color: rgb(0, 42, 212);">gamma ray</span>. The <strong>shield</strong> protects you from incoming damage for a limited time, while the <strong>gamma ray</strong> unleashes a powerful beam that destroys everything in its path — including blockers. You also have a difficulty selection. <span style="color: green">EASY</span>: 3 lifes, slow aliens, slow alien missiles. <span style="color: red">HARD</span>: 1 life, fast aliens and fast alien missiles.</p>
-       <button class="close-instructions">CLOSE</button>
+      <hr />
+
+      <h4>Special Actions:</h4>
+      <p>
+        Every 7th alien you destroy with your basic attack will drop a power-up,
+        every 10th alien you killed launches an auto-target missile. The drop
+        can either be a <span style="color: rgb(232, 121, 3)">shield</span> or a
+        <span style="color: rgb(0, 42, 212)">gamma ray</span>. The
+        <strong>shield</strong> protects you from incoming damage for a limited
+        time, while the <strong>gamma ray</strong> unleashes a powerful beam
+        that destroys everything in its path — including blockers. You also have
+        a difficulty selection. <span style="color: green">EASY</span>: 3 lifes,
+        slow aliens, slow alien missiles. <span style="color: red">HARD</span>:
+        1 life, fast aliens and fast alien missiles.
+      </p>
+      <button class="close-instructions">CLOSE</button>
     </div>
 
     <div id="game-container" style="display: none"></div>
 
     <div id="end-screen">
-    <h1 id="end-screen-result"></h1>
-    <p id="end-screen-score">Your score: ${score}.</p>
-    <p>Note: To play the game again, restart the tab. </p>
-    <button id="back-home">Back to Home</button>
-  </div>
-
+      <h1 id="end-screen-result"></h1>
+      <p id="end-screen-score">Your score: ${score}.</p>
+      <p>Note: To play the game again, restart the tab.</p>
+      <button id="back-home">Back to Home</button>
+    </div>
+    <script type="module" src="src/domManipulation.js"></script>
+    <script type="module" src="src/main.js"></script>
   </body>
-  <script type="module" src="src/domManipulation.js"></script>
-  <script type="module" src="src/main.js"></script>
 </html>

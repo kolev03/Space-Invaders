@@ -86,63 +86,63 @@ async function load() {
   const assets = [
     {
       alias: "background",
-      src: "public/assets/background.png",
+      src: "assets/background.png",
     },
     {
       alias: "playerShip",
-      src: "public/assets/space-ship.png",
+      src: "assets/space-ship.png",
     },
     {
       alias: "alienMissile",
-      src: "public/assets/alienMissile.png",
+      src: "assets/alienMissile.png",
     },
     {
       alias: "missle",
-      src: "public/assets/missile.png",
+      src: "assets/missile.png",
     },
     {
       alias: "alien1",
-      src: "public/assets/alien1.png",
+      src: "assets/alien1.png",
     },
     {
       alias: "blocker4/4",
-      src: "public/assets/blockerFull.png",
+      src: "assets/blockerFull.png",
     },
     {
       alias: "blocker4/3",
-      src: "public/assets/blockerLittleDmg.png",
+      src: "assets/blockerLittleDmg.png",
     },
     {
       alias: "blocker4/2",
-      src: "public/assets/blockerDecentDmg.png",
+      src: "assets/blockerDecentDmg.png",
     },
     {
       alias: "blocker4/1",
-      src: "public/assets/blockerDestroyed.png",
+      src: "assets/blockerDestroyed.png",
     },
     {
       alias: "ufo",
-      src: "public/assets/ufo.png",
+      src: "assets/ufo.png",
     },
     {
       alias: "omegaRay",
-      src: "public/assets/omegaRay.png",
+      src: "assets/omegaRay.png",
     },
     {
       alias: "guidedMissile",
-      src: "public/assets/guidedMissile.png",
+      src: "assets/guidedMissile.png",
     },
     {
       alias: "shield",
-      src: "public/assets/shield.png",
+      src: "assets/shield.png",
     },
     {
       alias: "shieldIcon",
-      src: "public/assets/shieldIcon.png",
+      src: "assets/shieldIcon.png",
     },
     {
       alias: "ray",
-      src: "public/assets/ray.png",
+      src: "assets/ray.png",
     },
   ];
 
@@ -717,43 +717,6 @@ function displayEndResult(result) {
   }, 500);
 }
 
-function resetGame() {
-  // 1) Stop the game loop
-  gameRunning = false;
-  app.ticker.stop();
-
-  // 2) Clear the stage entirely (removes player, aliens, UI, etc.)
-
-  // 3) Reset all counters & flags
-  score = 0;
-  killedAliensForDrops = 0;
-  aliensKilledForGuidedMissile = 0;
-  aliensSpeed = 0.75; // back to your base speed
-  intervalUFO = 0;
-  intervalAlienMissile = 0;
-  intervalShield = 0;
-  intervalLaser = 0;
-  isMissleOnScreen = false;
-  missle = null;
-  shield = false;
-  omegaRay = false;
-
-  // 4) Clear input state
-  keys = {};
-
-  // 5) Destroy & empty all projectile/bonus arrays
-  missiles.forEach((m) => m.die());
-  missiles = [];
-
-  guidedMissiles.forEach((m) => m.die());
-  guidedMissiles = [];
-
-  powerDrops.forEach((p) => p.disappear());
-  powerDrops = [];
-
-  aliensAlive = [];
-  currentStage = 1;
-
-  // 7) Restart ticker so you can play again
-  gameRunning = true;
+export function resetGame() {
+  window.location.reload();
 }

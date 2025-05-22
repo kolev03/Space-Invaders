@@ -1,4 +1,4 @@
-import { startGame } from "./main";
+import { resetGame, startGame } from "./main";
 import gsap from "gsap";
 import { gameState } from "./main";
 
@@ -72,18 +72,7 @@ hardDifficultyButton.addEventListener("click", async function () {
 
 // Clicking Back to Home button
 backToHome.addEventListener("click", () => {
-  getClickSound();
-  gsap.to(endScreen, {
-    duration: 0.35,
-    x: "100%",
-    onComplete: () => {
-      endScreen.style.display = "none";
-      document.getElementById("start-menu").style.display = "block";
-    },
-  });
-  instructionPopped = !instructionPopped;
-  applyStartPageStyles();
-  backgroundMusic.play();
+  resetGame();
 });
 
 closeInstructionButton.addEventListener("click", function () {
