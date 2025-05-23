@@ -152,6 +152,7 @@ async function load() {
 export async function startGame() {
   await load();
   backgroundMusic.volume = 0.4;
+  backgroundMusic.loop = true;
   backgroundMusic.play();
 
   gameRunning = true;
